@@ -4,9 +4,9 @@
 PROJECT(NativeSolid)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE PATH
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../lib CACHE PATH
                         "Single output directory for building all libraries.")
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../bin CACHE PATH
                         "Single output directory for building all executables.")
 MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
