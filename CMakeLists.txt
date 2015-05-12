@@ -4,7 +4,7 @@
 # cmake -C ../waves/CMake/ubuntu.cmake ../waves
 #
 
-PROJECT(LinSolve)
+PROJECT(NativeSolid)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE PATH
