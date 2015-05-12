@@ -1,0 +1,47 @@
+# Main CMake file
+#
+# mkdir wavesB
+# cmake -C ../waves/CMake/ubuntu.cmake ../waves
+#
+
+PROJECT(LinSolve)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/lib CACHE PATH
+                        "Single output directory for building all libraries.")
+SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin CACHE PATH
+                        "Single output directory for building all executables.")
+MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
+
+LIST(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/CMake")
+
+
+# -- CBLAS/LAPACKE --
+
+
+FIND_PACKAGE(LAPACKE REQUIRED)
+    MESSAGE(STATUS "LAPACKE_LIBRARIES=${LAPACKE_LIBRARIES}")  
+    MESSAGE(STATUS "LAPACKE_LINKER_FLAGS=${LAPACKE_LINKER_FLAGS}")  
+    MESSAGE(STATUS "CBLA_VENDOR=${CBLA_VENDOR}")  
+    MESSAGE(STATUS "CBLA_STATIC=${CBLA_STATIC}") 
+
+
+FIND_PATH(LAPACKE_LIB_PATH 
+             NAMES lapacke.so
+             DOC "LAPACKE library path"
+            )
+FIND_PATH(LAPACKE_INCLUDE_PATH 
+             NAMES  lapacke.h
+             DOC "LAPACKE include path"
+            )
+
+INCLUDE_DIRECTORIES( ${LAPACKE_INCLUDE_PATH} )
+LINK_DIRECTORIES(${LAPACKE_LIB_PATH})
+
+# -- Sub directories
+ADD_SUBDIRECTORY( src )
+
+
+
+
+

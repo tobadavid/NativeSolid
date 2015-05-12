@@ -1,0 +1,4 @@
+SET(LAPACKE_LIB_PATH		"/usr/lib/" CACHE PATH "" FORCE)
+SET(LAPACKE_INCLUDE_PATH	"/usr/include/" CACHE PATH "" FORCE)
+SET(LAPACKE_LINKER_FLAGS	"-llapacke")
+SET(LAPACKE_LIBRARIES		"/usr/lib/liblapacke.so")
