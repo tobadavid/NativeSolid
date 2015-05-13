@@ -9,6 +9,6 @@ INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR}/include
 
 TARGET_LINK_LIBRARIES(Native lapacke blas )
 
-ADD_EXECUTABLE(main ../include/Native.hpp main.cpp)
+ADD_EXECUTABLE(NativeSolid ../include/Native.hpp main.cpp)
 
-TARGET_LINK_LIBRARIES(main Native lapacke blas )
+TARGET_LINK_LIBRARIES(NativeSolid Native lapacke blas )
