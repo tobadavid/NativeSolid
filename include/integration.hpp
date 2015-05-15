@@ -49,9 +49,11 @@ public:
     CVector* GetAcc() const;
     void SetIntegrationParam(Config* config);
     void SetLoadsAtTime(Config* config, Structure* structure, const double & time);
+    void SetStaticLoads(Config* config, Structure* structure);
     void SetInitialConditions(Config* config, Structure* structure);
     void ComputeResidual(CMatrix* M, CMatrix* C, CMatrix* K, CVector* res);
     void ComputeTangentOperator(Structure* structure, CMatrix* St);
     void TemporalIteration(Config *config, Structure *structure);
+    void StaticIteration(Config *config, Structure *structure);
     void UpdateSolution();
 };

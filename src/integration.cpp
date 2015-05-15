@@ -123,6 +123,39 @@ void Integration::SetLoadsAtTime(Config* config, Structure* structure, const dou
   else cout << "Option for FORCE_INPUT_TYPE has to be specified (FILE or ANALYTICAL)" << endl;
 }
 
+void Integration::SetStaticLoads(Config* config, Structure* structure){
+  if(config->GetForceInputType() == "FILE"){
+    cout << "Setting applied force from a file : " << config->GetForceInputFile() << endl;
+    string delimiter = "\t";
+    size_t pos;
+    string ForceFileName = config->GetForceInputFile();
+    string text_line, tempString, token;
+    ifstream InputFile;
+    InputFile.open(ForceFileName.c_str(), ios::in);
+        while (getline(InputFile,text_line)){
+            tempString = text_line;
+        }
+        InputFile.close();
+    pos = tempString.find(delimiter);
+    token = tempString.substr(0,pos);
+    tempString.erase(0,pos+delimiter.length());
+    if (config->GetStructType() == "SPRING_HOR") (*Loads)[0] = atof(tempString.c_str());
+    else if (config->GetStructType() == "SPRING_VER") (*Loads)[0] = atof(token.c_str());
+    else{
+      cerr << "Not ready for AIRFOIL implementation" << endl;
+      throw(-1);
+    }
+  }
+  else if(config->GetForceInputType() == "ANALYTICAL" && config->GetAnalyticalFunction() == "CONSTANT"){
+    (*Loads)[0] = config->GetConstantForceValue();
+    if(structure->GetnDof() == 2) (*Loads)[1] = 0.0;
+  }
+  else{
+    cerr << "For static computation, the analytical function for the applied load must be CONSTANT" << endl;
+    throw(-1);
+  }
+}
+
 void Integration::SetInitialConditions(Config* config, Structure* structure){
   string delimiter = "\t";
   size_t pos;
@@ -214,6 +247,12 @@ void Integration::TemporalIteration(Config *config, Structure *structure){
   Deltaq = NULL;
   res = NULL;
   St = NULL;
+}
+
+void Integration::StaticIteration(Config *config, Structure *structure){
+  q->Reset();
+  *q += *Loads;
+  SolveSys(structure->GetK(),q); //q will be updated with the new solution...
 }
 
 void Integration::UpdateSolution(){

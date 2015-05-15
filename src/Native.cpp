@@ -56,26 +56,34 @@ int LaunchNative(string FileName)
     /*--- Initialize the temporal integrator ---*/
     cout << endl << "\n----------------------- Setting integration parameter ----------------------" << endl;
     solver = new Integration(structure);
-    solver->SetIntegrationParam(config);
-    totTime = solver->GettotTime();
-    deltaT = solver->GetdeltaT();
+    if(config->GetUnsteady() == "YES"){
+      solver->SetIntegrationParam(config);
+      totTime = solver->GettotTime();
+      deltaT = solver->GetdeltaT();
 
-    cout << endl << "\n----------------------- Begin temporal integration ----------------------" << endl;
-    solver->SetLoadsAtTime(config, structure, currentTime);
-    solver->SetInitialConditions(config, structure);
-    output->WriteHistory(solver, structure, &outputfile, currentTime);
-    solver->UpdateSolution();
-    currentTime += deltaT;
-
-    while(currentTime <= totTime+deltaT){
+      cout << endl << "\n----------------------- Begin temporal integration ----------------------" << endl;
       solver->SetLoadsAtTime(config, structure, currentTime);
-      solver->TemporalIteration(config, structure);
+      solver->SetInitialConditions(config, structure);
       output->WriteHistory(solver, structure, &outputfile, currentTime);
       solver->UpdateSolution();
       currentTime += deltaT;
-    }
 
-    cout << endl << "\n----------------------- Temporal integration successfully ended ----------------------" << endl;
+      while(currentTime <= totTime+deltaT){
+        solver->SetLoadsAtTime(config, structure, currentTime);
+        solver->TemporalIteration(config, structure);
+        output->WriteHistory(solver, structure, &outputfile, currentTime);
+        solver->UpdateSolution();
+        currentTime += deltaT;
+      }
+      cout << endl << "\n----------------------- Temporal integration successfully ended ----------------------" << endl;
+    }
+    else{
+      cout << endl << "\n----------------------- Compute static displacement ----------------------" << endl;
+      solver->SetStaticLoads(config,structure);
+      solver->StaticIteration(config,structure);
+      output->WriteStaticSolution(config, solver, structure, &outputfile);
+      cout << endl << "\n----------------------- Successfull computation ----------------------" << endl;
+    }
     outputfile.close();
 
     delete config;

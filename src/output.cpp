@@ -23,3 +23,22 @@ void Output::WriteHistory(Integration* solver, Structure* structure, ofstream* o
     outputfile[0] << time << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetVel()))[1] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAcc()))[1] << endl;
   }
 }
+
+void Output::WriteStaticSolution(Config* config, Integration* solver, Structure* structure, ofstream* outputfile){
+  if(structure->GetnDof() == 1){
+    cout << "Static displacement is : " << (*(solver->GetDisp()))[0] << " [m]" << endl;
+    cout << "Writing displacement into a solution file" << endl;
+    if(config->GetStructType() == "SPRING_HOR"){
+      outputfile[0] << -1.000 << "\t" << (*(solver->GetDisp()))[0] << "\t" << 0.000;
+    }
+    else if(config->GetStructType() == "SPRING_VER"){
+      outputfile[0] << -1.000 << "\t" << 0.000 << "\t" << (*(solver->GetDisp()))[0];
+    }
+  }
+  else if(structure->GetnDof() == 2){
+    cout << "Plunging displacement is :" << (*(solver->GetDisp()))[0] << " [m]" << endl;
+    cout << "Pitching rotation is :" << (*(solver->GetDisp()))[1] << " [rad]" << endl;
+    cout << "Writing displacement into a solution file" << endl;
+    outputfile[0] << -1.000 << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1];
+  }
+}
