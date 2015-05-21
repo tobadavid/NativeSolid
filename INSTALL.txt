@@ -1,0 +1,17 @@
+Installation of NativeSolid code
+
+Comments :
+*You will need CMAKE installed (~sudo apt-get install cmake)
+
+1. Create and go to the build folder
+	$ mkdir build
+	$ cd build 
+   and check that it is empty. If not : 
+	$ rm -r *
+2. Execute : 
+	$ cmake ..  
+   for configuration.
+3. If no error, execute : 
+	$ make  (you can do : $ make -j numthreads  , for multi-threads compilation)
+4. Set your environment variable in you .bashrc file as :
+	export PATH=$PATH:INSTALL_PATH/NativeSolid/bin
