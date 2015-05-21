@@ -47,6 +47,10 @@ CVector* Integration::GetAcc() const{
   return qddot;
 }
 
+CVector* Integration::GetAccVar() const{
+  return a;
+}
+
 void Integration::SetIntegrationParam(Config* config){
 
   totTime = config->GetStopTime();
@@ -166,6 +170,43 @@ void Integration::SetInitialConditions(Config* config, Structure* structure){
   CVector* RHS = new CVector(structure->GetnDof(),double(0));
 
   if(config->GetRestartSol() == "YES"){
+    string InputFileName = config->GetRestartFile();
+    string text_line;
+    string token, tempString;
+    size_t pos;
+    string delimiter = "\t";
+    ifstream InputFile;
+    InputFile.open(InputFileName.c_str(), ios::in);
+    double buffer[4*structure->GetnDof()];
+	while (getline(InputFile,text_line)){
+      tempString = text_line;
+    }
+    InputFile.close();
+    int jj = 0;
+    while ((pos = tempString.find(delimiter)) != string::npos){
+      token = tempString.substr(0,pos);
+      tempString.erase(0,pos+delimiter.length());
+      buffer[jj] = atof(token.c_str());
+      jj += 1;
+    }
+	buffer[jj] = atof(tempString.c_str());
+
+	if(structure->GetnDof() == 1){
+	  (*q)[0] = buffer[0];
+	  (*qdot)[0] = buffer[1];
+	  (*qddot)[0] = buffer[2];
+	  (*a)[0] = buffer[3];
+	}
+	else if (structure->GetnDof() == 2){
+	  (*q)[0] = buffer[0];
+	  (*q)[1] = buffer[1];
+	  (*qdot)[0] = buffer[2];
+	  (*qdot)[1] = buffer[3];
+	  (*qddot)[0] = buffer[4];
+	  (*qddot)[1] = buffer[5];
+	  (*a)[0] = buffer[6];
+	  (*a)[1] = buffer[7];
+	}
   }
   else{
     cout << "Setting basic initial conditions" << endl;

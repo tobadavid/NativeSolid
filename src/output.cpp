@@ -24,6 +24,20 @@ void Output::WriteHistory(Integration* solver, Structure* structure, ofstream* o
   }
 }
 
+void Output::WriteRestart(Integration* solver, Structure* structure){
+  ofstream RestartFile;
+  RestartFile.open("Nat_solution_restart.out", ios::out);
+
+  if(structure->GetnDof() == 1){
+    RestartFile << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << "\t" << "\"Acceleration variable\"" << endl;
+    RestartFile << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAccVar()))[0] << endl;
+  }
+  else if(structure->GetnDof() == 2){
+    RestartFile << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << "\t" << "\"Acceleration variable 1\"" << "\t" << "\"Acceleration variable 2\"" << endl;
+    RestartFile << time << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetVel()))[1] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAcc()))[1]<< "\t" << (*(solver->GetAccVar()))[0] << "\t" << (*(solver->GetAccVar()))[1] << endl;
+  }
+}
+
 void Output::WriteStaticSolution(Config* config, Integration* solver, Structure* structure, ofstream* outputfile){
   if(structure->GetnDof() == 1){
     cout << "Static displacement is : " << (*(solver->GetDisp()))[0] << " [m]" << endl;

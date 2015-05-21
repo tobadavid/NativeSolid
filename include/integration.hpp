@@ -47,6 +47,7 @@ public:
     CVector* GetDisp() const;
     CVector* GetVel() const;
     CVector* GetAcc() const;
+    CVector* GetAccVar() const;
     void SetIntegrationParam(Config* config);
     void SetLoadsAtTime(Config* config, Structure* structure, const double & time);
     void SetStaticLoads(Config* config, Structure* structure);

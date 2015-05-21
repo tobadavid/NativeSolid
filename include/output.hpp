@@ -21,6 +21,7 @@ public:
     Output(void);
     ~Output();
     void WriteHistory(Integration* solver, Structure* structure, ofstream* outputfile, const double & time);
+    void WriteRestart(Integration* solver, Structure* structure);
     void WriteStaticSolution(Config* config, Integration* solver, Structure* structure, ofstream* outputfile);
     //void WriteRestart();
 };
