@@ -1,4 +1,11 @@
-#include "../include/integration.hpp"
+#include "../include/integration.h"
+#include <iostream>
+#include <cstdlib>
+#include <stdlib.h>
+#include <fstream>
+#include <cmath>
+
+using namespace std;
 
 Integration::Integration(Structure *structure){
 

@@ -1,20 +1,11 @@
 #pragma once
 
-#ifdef HAVE_MPI
-    #include "mpi.h"
-#endif
-
-#include <iostream>
-#include <cstdlib>
-#include <stdlib.h>
-
-#include "MatVec.hpp"
-#include "config.hpp"
-#include "structure.hpp"
+#include "MatVec.h"
+#include "config.h"
+#include "structure.h"
 
 #define PI 3.14159265
 
-using namespace std;
 
 class Integration{
 
@@ -37,7 +28,7 @@ protected:
     CVector* qddot_n;
     CVector* a_n;
     CVector* Loads;
-    string algo;
+    std::string algo;
 
 public:
     Integration(Structure *structure);

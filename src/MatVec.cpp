@@ -1,4 +1,8 @@
-#include "../include/MatVec.hpp"
+#include "../include/MatVec.h"
+#include <iostream>
+#include <cmath>
+
+using namespace std;
 
 /*--- Definition of the CVector class ---*/
 

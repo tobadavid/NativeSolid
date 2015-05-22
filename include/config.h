@@ -1,38 +1,24 @@
 #pragma once
 
-#ifdef HAVE_MPI
-    #include "mpi.h"
-#endif
+#include <string>
 
-#include <cstring>
-#include <cstdlib>
-#include <stdlib.h>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <ctime>
-#include <cmath>
-#include <algorithm>
-
-using namespace std;
 
 class Config{
 
 public:
-    Config(string filename);
+    Config(std::string filename);
     virtual ~Config();
     virtual Config* GetAddress();
     virtual void ReadConfig();
-    virtual string GetUnsteady();
-    virtual string GetCSDSolver();
-    virtual string GetStructType();
-    virtual string GetForceInputType();
-    virtual string GetForceInputFile();
-    virtual string GetAnalyticalFunction();
-    virtual string GetIntegrationAlgo();
-    virtual string GetRestartSol();
-    virtual string GetRestartFile();
+    virtual std::string GetUnsteady();
+    virtual std::string GetCSDSolver();
+    virtual std::string GetStructType();
+    virtual std::string GetForceInputType();
+    virtual std::string GetForceInputFile();
+    virtual std::string GetAnalyticalFunction();
+    virtual std::string GetIntegrationAlgo();
+    virtual std::string GetRestartSol();
+    virtual std::string GetRestartFile();
     virtual double GetSpringStiffness();
     virtual double GetSpringMass();
     virtual double GetSpringDamping();
@@ -50,8 +36,8 @@ public:
     virtual double GetRho();
 
 protected:
-    string ConfigFileName;
-    string UNSTEADY_SIMULATION, CSD_SOLVER, STRUCT_TYPE, FORCE_INPUT_TYPE, FORCE_INPUT_FILE, ANALYTICAL_FUNCTION, INTEGRATION_ALGO, RESTART_SOL, RESTART_FILE;
+    std::string ConfigFileName;
+    std::string UNSTEADY_SIMULATION, CSD_SOLVER, STRUCT_TYPE, FORCE_INPUT_TYPE, FORCE_INPUT_FILE, ANALYTICAL_FUNCTION, INTEGRATION_ALGO, RESTART_SOL, RESTART_FILE;
     double SPRING_STIFFNESS, SPRING_MASS, SPRING_DAMPING, TORSIONAL_STIFFNESS, TORSIONAL_DAMPING, CORD, FLEXURAL_AXIS, START_TIME, DELTA_T, STOP_TIME, FREQUENCY, AMPLITUDE, CONSTANT_FORCE_VALUE, ALPHA, RHO;
 
 };

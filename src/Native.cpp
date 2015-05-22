@@ -5,7 +5,17 @@
  * \version BETA
 */
 
-#include "../include/Native.hpp"
+#include "../include/Native.h"
+#include "config.h"
+#include "structure.h"
+#include "integration.h"
+#include "output.h"
+#include "MatVec.h"
+#include <iostream>
+
+#ifdef HAVE_MPI
+  #include "mpi.h"
+#endif // HAVE_MPI
 
 using namespace std;
 

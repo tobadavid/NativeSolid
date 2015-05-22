@@ -1,19 +1,7 @@
-#ifdef HAVE_MPI
-    #include "mpi.h"
-#endif
-
-#include <cstring>
-#include <cstdlib>
-#include <stdlib.h>
-#include <vector>
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <ctime>
-#include <cmath>
-#include <algorithm>
+#include <stdlib.h>
 
-#include "../include/Native.hpp"
+#include "../include/Native.h"
 
 using namespace std;
 

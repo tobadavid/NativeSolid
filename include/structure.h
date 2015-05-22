@@ -1,20 +1,8 @@
 #pragma once
 
-#ifdef HAVE_MPI
-    #include "mpi.h"
-#endif
+#include "MatVec.h"
+#include "config.h"
 
-#include <iostream>
-#include <cstdlib>
-#include <stdlib.h>
-#include <fstream>
-#include <sstream>
-
-#include "MatVec.hpp"
-#include "config.hpp"
-
-
-using namespace std;
 
 class Structure{
 

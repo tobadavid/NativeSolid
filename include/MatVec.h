@@ -1,14 +1,7 @@
 #pragma once
 
-#include <iostream>
-#include <vector>
-#include <cmath>
-#include <cstring>
-#include <cstdlib>
 #include <cblas.h>
 #include <lapacke.h>
-
-using namespace std;
 
 class CVector {
 

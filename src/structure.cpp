@@ -1,4 +1,11 @@
-#include "../include/structure.hpp"
+#include "../include/structure.h"
+#include <iostream>
+#include <cstdlib>
+#include <stdlib.h>
+#include <fstream>
+#include <sstream>
+
+using namespace std;
 
 Structure::Structure(Config* config){
   if(config->GetStructType() == "SPRING_HOR" || config->GetStructType() == "SPRING_VER" ){

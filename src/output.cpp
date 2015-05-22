@@ -1,4 +1,7 @@
-#include "../include/output.hpp"
+#include "../include/output.h"
+#include <iostream>
+
+using namespace std;
 
 Output::Output(){}
 

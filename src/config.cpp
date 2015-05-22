@@ -1,4 +1,11 @@
-#include "../include/config.hpp"
+#include "../include/config.h"
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <stdlib.h>
+#include <algorithm>
+
+using namespace std;
 
 Config::Config(string filename):ConfigFileName(filename)
 {
