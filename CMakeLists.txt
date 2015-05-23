@@ -4,7 +4,7 @@
 PROJECT(NativeSolid)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../lib CACHE PATH
+SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../bin CACHE PATH
                         "Single output directory for building all libraries.")
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../bin CACHE PATH
                         "Single output directory for building all executables.")
@@ -26,7 +26,6 @@ FIND_PACKAGE(LAPACKE REQUIRED)
     MESSAGE(STATUS "LAPACKE_LINKER_FLAGS=${LAPACKE_LINKER_FLAGS}")  
     MESSAGE(STATUS "CBLA_VENDOR=${CBLA_VENDOR}")  
     MESSAGE(STATUS "CBLA_STATIC=${CBLA_STATIC}") 
-
 FIND_PATH(LAPACKE_LIB_PATH 
              NAMES lapacke.so
              DOC "LAPACKE library path"
@@ -35,14 +34,19 @@ FIND_PATH(LAPACKE_INCLUDE_PATH
              NAMES  lapacke.h
              DOC "LAPACKE include path"
             )
-
 INCLUDE_DIRECTORIES( ${LAPACKE_INCLUDE_PATH} )
 LINK_DIRECTORIES(${LAPACKE_LIB_PATH})
 
+# -- Python --
+FIND_PACKAGE(PythonLibs REQUIRED)
+#SET(PYTHON_INCLUDE_PATH	"/usr/include/python2.7" CACHE PATH "" FORCE)
+    MESSAGE(STATUS "PYTHON_INCLUDE_PATH=${PYTHON_INCLUDE_PATH}") 
+
+
+# -- SWIG --
+FIND_PACKAGE(SWIG REQUIRED)
+SET(CMAKE_SWIG_OUTDIR "${EXECUTABLE_OUTPUT_PATH}")
+
 # -- Sub directories
 ADD_SUBDIRECTORY( src )
-
-
-
-
-
+ADD_SUBDIRECTORY( _src )
