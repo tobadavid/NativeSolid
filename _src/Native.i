@@ -1,4 +1,4 @@
-// SWIG input file of the 'heat' module
+// SWIG input file of the 'Native' module
 
 %feature("autodoc","1");
 
