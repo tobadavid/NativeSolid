@@ -58,6 +58,13 @@ CVector* Integration::GetAccVar() const{
   return a;
 }
 
+CVector* Integration::GetDisp_n() const{
+  return q_n;
+}
+CVector* Integration::GetVel_n() const{
+  return qdot_n;
+}
+
 void Integration::SetIntegrationParam(Config* config){
 
   totTime = config->GetStopTime();
@@ -107,7 +114,7 @@ void Integration::SetIntegrationParam(Config* config){
   cout << "betaPrime : " << betaPrime << endl;
 }
 
-void Integration::SetLoadsAtTime(Config* config, Structure* structure, const double & time){
+void Integration::SetLoadsAtTime(Config* config, Structure* structure, const double & time, double FSI_Load){
   if(config->GetForceInputType() == "FILE"){
     string textLine;
     string ForceFileName = config->GetForceInputFile();
@@ -130,6 +137,10 @@ void Integration::SetLoadsAtTime(Config* config, Structure* structure, const dou
     }
     else if (config->GetUnsteady() != "YES" && config->GetAnalyticalFunction() == "CONSTANT"){
     }
+  }
+  else if (config->GetForceInputType() == "FSI"){
+    (*Loads)[0] = FSI_Load;
+    if(structure->GetnDof() == 2) (*Loads)[1] = 0.0;
   }
   else cout << "Option for FORCE_INPUT_TYPE has to be specified (FILE or ANALYTICAL)" << endl;
 }
@@ -217,6 +228,7 @@ void Integration::SetInitialConditions(Config* config, Structure* structure){
   }
   else{
     cout << "Setting basic initial conditions" << endl;
+    SetLoadsAtTime(config, structure, 0.0, 0.0);
     q->Reset();
     qdot->Reset();
     qddot->Reset();

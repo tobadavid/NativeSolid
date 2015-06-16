@@ -72,14 +72,14 @@ int LaunchNative(string FileName)
       deltaT = solver->GetdeltaT();
 
       cout << endl << "\n----------------------- Begin temporal integration ----------------------" << endl;
-      solver->SetLoadsAtTime(config, structure, currentTime);
+      //solver->SetLoadsAtTime(config, structure, currentTime);
       solver->SetInitialConditions(config, structure);
       output->WriteHistory(solver, structure, &outputfile, currentTime);
       solver->UpdateSolution();
       currentTime += deltaT;
 
       while(currentTime <= totTime+deltaT){
-        solver->SetLoadsAtTime(config, structure, currentTime);
+        solver->SetLoadsAtTime(config, structure, currentTime, 0.0);
         solver->TemporalIteration(config, structure);
         output->WriteHistory(solver, structure, &outputfile, currentTime);
         solver->UpdateSolution();

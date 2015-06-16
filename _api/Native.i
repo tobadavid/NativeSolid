@@ -1,16 +1,16 @@
-// SWIG input file of the 'Native' module
+// SWIG input file of the 'NativeSolid' module
 
 %feature("autodoc","1");
 
 %module(docstring=
-"'Native' module",
+"'NativeSolid' module",
 directors="1",
 threads="1"
-) Native
+) NativeSolid
 %{
 
 #include <string>
-#include "Native.h"
+#include "NativeSolid_API.h"
 
 
 %}
@@ -19,4 +19,4 @@ threads="1"
 %include "std_string.i"
 
 // ----------- NATIVE CLASSES ----------------
-%include "Native.h"
+%include "NativeSolid_API.h"

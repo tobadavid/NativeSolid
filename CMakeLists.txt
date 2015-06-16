@@ -1,5 +1,4 @@
-# Main CMake file
-#
+# Main CMake file for NativeSolid project
 
 PROJECT(NativeSolid)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
@@ -8,6 +7,7 @@ SET(LIBRARY_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../bin CACHE PATH
                         "Single output directory for building all libraries.")
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/../bin CACHE PATH
                         "Single output directory for building all executables.")
+
 MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
 
 if( NOT CMAKE_BUILD_TYPE )
@@ -39,7 +39,6 @@ LINK_DIRECTORIES(${LAPACKE_LIB_PATH})
 
 # -- Python --
 FIND_PACKAGE(PythonLibs REQUIRED)
-#SET(PYTHON_INCLUDE_PATH	"/usr/include/python2.7" CACHE PATH "" FORCE)
     MESSAGE(STATUS "PYTHON_INCLUDE_PATH=${PYTHON_INCLUDE_PATH}") 
 
 
@@ -49,4 +48,5 @@ SET(CMAKE_SWIG_OUTDIR "${EXECUTABLE_OUTPUT_PATH}")
 
 # -- Sub directories
 ADD_SUBDIRECTORY( src )
-ADD_SUBDIRECTORY( _src )
+ADD_SUBDIRECTORY( _api )
+

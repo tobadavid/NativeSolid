@@ -39,8 +39,10 @@ public:
     CVector* GetVel() const;
     CVector* GetAcc() const;
     CVector* GetAccVar() const;
+    CVector* GetDisp_n() const;
+    CVector* GetVel_n() const;
     void SetIntegrationParam(Config* config);
-    void SetLoadsAtTime(Config* config, Structure* structure, const double & time);
+    void SetLoadsAtTime(Config* config, Structure* structure, const double & time, double FSI_Load);
     void SetStaticLoads(Config* config, Structure* structure);
     void SetInitialConditions(Config* config, Structure* structure);
     void ComputeResidual(CMatrix* M, CMatrix* C, CMatrix* K, CVector* res);
