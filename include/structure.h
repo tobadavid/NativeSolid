@@ -20,13 +20,14 @@ protected:
     CMatrix* M;
     CMatrix* C;
     CMatrix* K;
+    //double* interfaceCoord;
     //CVector* InitialSolution;
 
 
 public:
     Structure(Config* config);
     virtual ~Structure();
-
+    //void readMeshSU2;
     void SetStructuralMatrices(Config* config);
     //void SetSolutionInTime();
     CMatrix* GetM();

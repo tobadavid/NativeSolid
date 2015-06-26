@@ -36,6 +36,7 @@ public:
     double GettotTime();
     double GetdeltaT();
     CVector* GetDisp() const;
+    void SetDisp(double & val_disp);
     CVector* GetVel() const;
     CVector* GetAcc() const;
     CVector* GetAccVar() const;

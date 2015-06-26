@@ -5,6 +5,7 @@
 #include "../include/structure.h"
 #include "../include/integration.h"
 #include "../include/output.h"
+#include "../include/MatVec.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -19,6 +20,8 @@ protected:
     Integration* solver;
     Output* output;
     std::ofstream outputFile;
+    CVector* q_uM1; //The displacement at the previous FSI iteration
+    double omega;
 
 public:
     NativeSolidSolver(std::string str);
@@ -27,8 +30,12 @@ public:
     void exit();
     void inputFluidLoads(double currentTime, double FSI_Load);
     void timeIteration(double currentTime);
-    void writeSolution(double currentTime);
+    void staticComputation();
+    void writeSolution(double currentTime, double currentFSIIter);
     void updateSolution();
-    double outputDisplacements();
-    double displacementPredictor();
+    void outputDisplacements(double* interfRigidDispArray);
+    void displacementPredictor(double* interfRigidDispArray);
+    void setAitkenCoefficient(unsigned long FSIIter);
+    double aitkenRelaxation();
+
 };

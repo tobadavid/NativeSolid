@@ -47,6 +47,10 @@ CVector* Integration::GetDisp() const{
   return q;
 }
 
+void Integration::SetDisp(double & val_disp){
+  (*q)[0] = val_disp;
+}
+
 CVector* Integration::GetVel() const{
   return qdot;
 }
