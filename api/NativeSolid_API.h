@@ -22,6 +22,7 @@ protected:
     std::ofstream outputFile;
     CVector* q_uM1; //The displacement at the previous FSI iteration
     double omega;
+    double* globalFluidLoads;
 
 public:
     NativeSolidSolver(std::string str);
@@ -29,6 +30,8 @@ public:
     void initialize(bool FSIComp);
     void exit();
     void inputFluidLoads(double currentTime, double FSI_Load);
+    double* getGlobalFluidLoadsArray() const;
+    void applyGlobalFluidLoads();
     void timeIteration(double currentTime);
     void staticComputation();
     void writeSolution(double currentTime, double currentFSIIter);

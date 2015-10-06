@@ -37,11 +37,13 @@ public:
     double GetdeltaT();
     CVector* GetDisp() const;
     void SetDisp(double & val_disp);
+    //void SetLoads()
     CVector* GetVel() const;
     CVector* GetAcc() const;
     CVector* GetAccVar() const;
     CVector* GetDisp_n() const;
     CVector* GetVel_n() const;
+    CVector* GetLoads() const;
     void SetIntegrationParam(Config* config);
     void SetLoadsAtTime(Config* config, Structure* structure, const double & time, double FSI_Load);
     void SetStaticLoads(Config* config, Structure* structure);

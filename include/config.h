@@ -21,11 +21,16 @@ public:
     virtual std::string GetRestartFile();
     virtual double GetSpringStiffness();
     virtual double GetSpringMass();
+    virtual double GetInertiaCG();
+    virtual double GetInertiaFlexural();
     virtual double GetSpringDamping();
     virtual double GetTorsionalStiffness();
     virtual double GetTorsionalDamping();
     virtual double GetCord();
     virtual double GetFlexuralAxis();
+    virtual double GetGravityCenter();
+    virtual double GetInitialDisp();
+    virtual double GetInitialAngle();
     virtual double GetStartTime();
     virtual double GetDeltaT();
     virtual double GetStopTime();
@@ -38,6 +43,6 @@ public:
 protected:
     std::string ConfigFileName;
     std::string UNSTEADY_SIMULATION, CSD_SOLVER, STRUCT_TYPE, FORCE_INPUT_TYPE, FORCE_INPUT_FILE, ANALYTICAL_FUNCTION, INTEGRATION_ALGO, RESTART_SOL, RESTART_FILE;
-    double SPRING_STIFFNESS, SPRING_MASS, SPRING_DAMPING, TORSIONAL_STIFFNESS, TORSIONAL_DAMPING, CORD, FLEXURAL_AXIS, START_TIME, DELTA_T, STOP_TIME, FREQUENCY, AMPLITUDE, CONSTANT_FORCE_VALUE, ALPHA, RHO;
+    double SPRING_STIFFNESS, SPRING_MASS, INERTIA_CG, INERTIA_FLEXURAL, SPRING_DAMPING, TORSIONAL_STIFFNESS, TORSIONAL_DAMPING, CORD, FLEXURAL_AXIS, GRAVITY_CENTER, INITIAL_DISP, INITIAL_ANGLE, START_TIME, DELTA_T, STOP_TIME, FREQUENCY, AMPLITUDE, CONSTANT_FORCE_VALUE, ALPHA, RHO;
 
 };

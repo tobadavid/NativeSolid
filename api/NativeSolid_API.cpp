@@ -55,6 +55,10 @@ void NativeSolidSolver::initialize(bool FSIComp){
     cout << endl << "\n----------------------- Setting setting FSI features ----------------------" << endl;
     q_uM1 = new CVector(structure->GetnDof());
     q_uM1->Reset();
+    globalFluidLoads = new double[3];
+    globalFluidLoads[0] = 0.0;
+    globalFluidLoads[1] = 0.0;
+    globalFluidLoads[2] = 0.0;
 
   if(rank == MASTER_NODE){
     if(FSIComp)cout << endl << "***************************** NativeSolid is set for FSI simulation *****************************" << endl;
@@ -84,11 +88,39 @@ void NativeSolidSolver::exit(){
   delete solver;
   delete output;
   delete q_uM1;
+  delete [] globalFluidLoads;
 
 }
 
 void NativeSolidSolver::inputFluidLoads(double currentTime, double FSI_Load){
+
   solver->SetLoadsAtTime(config, structure, currentTime, FSI_Load);
+
+}
+
+double* NativeSolidSolver::getGlobalFluidLoadsArray() const{
+
+  return globalFluidLoads;
+
+}
+
+void NativeSolidSolver::applyGlobalFluidLoads(){
+
+  if(config->GetStructType() == "SPRING_HOR"){
+    ((solver->GetLoads())->GetVec())[0] = globalFluidLoads[1];
+  }
+  else if(config->GetStructType() == "SPRING_VER"){
+    ((solver->GetLoads())->GetVec())[0] = globalFluidLoads[0];
+  }
+  else if(config->GetStructType() == "AIRFOIL"){
+    ((solver->GetLoads())->GetVec())[0] = -globalFluidLoads[0];
+    ((solver->GetLoads())->GetVec())[1] = -globalFluidLoads[2];
+  }
+  else{
+    cerr << "Wrong structural type for applying global fluild loads !" << endl;
+    throw(-1);
+  }
+
 }
 
 void NativeSolidSolver::timeIteration(double currentTime){
@@ -185,8 +217,7 @@ void NativeSolidSolver::updateSolution(){
 
 void NativeSolidSolver::outputDisplacements(double* interfRigidDispArray){
 
-  //cout << interfRigidDispArray << endl;
-  double disp(0.0);
+  double disp(0.0), dAlpha(0.0);
 
   interfRigidDispArray[0] = 0.0;
   interfRigidDispArray[1] = 0.0;
@@ -197,6 +228,8 @@ void NativeSolidSolver::outputDisplacements(double* interfRigidDispArray){
 
   if(config->GetUnsteady() == "YES")
     disp =  ( (*(solver->GetDisp()))[0] - (*(solver->GetDisp_n()))[0]);
+    if (structure->GetnDof() == 2)
+      dAlpha =  ( (*(solver->GetDisp()))[1] - (*(solver->GetDisp_n()))[1]);
   else
     disp =  ( (*(solver->GetDisp()))[0] - (*q_uM1)[0] );
 
@@ -204,26 +237,48 @@ void NativeSolidSolver::outputDisplacements(double* interfRigidDispArray){
     interfRigidDispArray[0] = disp;
   else if (config->GetStructType() == "SPRING_VER")
     interfRigidDispArray[1] = disp;
+  else if (config->GetStructType() == "AIRFOIL"){
+    interfRigidDispArray[1] = -disp;
+    interfRigidDispArray[5] = -dAlpha;
+    cout << "Displacement communicated :" << endl;
+    cout << interfRigidDispArray[1] << endl;
+    cout << interfRigidDispArray[5] << endl;
+  }
 }
 
 void NativeSolidSolver::displacementPredictor(double* interfRigidDispArray){
 
-  double deltaT, q_n, qdot_n, qdot_nM1, q_nP1, alpha0, alpha1, disp;
+  double deltaT, q_n, qdot_n, qdot_nM1, q_nP1;
+  double alpha_n, alphadot_n, alphadot_nM1, alpha_nP1;
+  double alpha0, alpha1;
+  double disp, dAlpha;
+
   deltaT = config->GetDeltaT();
+  alpha0 = 1.0;
+  alpha1 = 0.5; //Second order prediction
+
   q_n = (*(solver->GetDisp()))[0];
   qdot_n = (*(solver->GetVel()))[0];
   qdot_nM1 = (*(solver->GetVel_n()))[0];
-  alpha0 = 1.0;
-  alpha1 = 0.5;
-
   q_nP1 = q_n + alpha0*deltaT*qdot_n + alpha1*deltaT*(qdot_n - qdot_nM1);
-
   disp = q_nP1-q_n;
+
+  if(structure->GetnDof() == 2){
+    alpha_n = (*(solver->GetDisp()))[1];
+    alphadot_n = (*(solver->GetVel()))[1];
+    alphadot_nM1 = (*(solver->GetVel_n()))[1];
+    alpha_nP1 = alpha_n + alpha0*deltaT*alphadot_n + alpha1*deltaT*(alphadot_n - alphadot_nM1);
+    dAlpha = alpha_nP1-alpha_n;
+  }
 
   if(config->GetStructType() == "SPRING_HOR")
     interfRigidDispArray[0] = disp;
   else if (config->GetStructType() == "SPRING_VER")
     interfRigidDispArray[1] = disp;
+  else if (config->GetStructType() == "AIRFOIL"){
+    interfRigidDispArray[1] = -disp;
+    interfRigidDispArray[5] = -dAlpha;
+  }
 }
 
 void NativeSolidSolver::setAitkenCoefficient(unsigned long FSIIter){

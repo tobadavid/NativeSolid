@@ -56,13 +56,18 @@ void Config::ReadConfig()
 	else if (option == "INTEGRATION_ALGO") INTEGRATION_ALGO = text_line;
     else if (option == "RESTART_SOL") RESTART_SOL = text_line;
 	else if (option == "RESTART_FILE") RESTART_FILE = text_line;
-	else if (option == "SPRING_STIFFNESS") SPRING_STIFFNESS = atof(text_line.c_str());
 	else if (option == "SPRING_MASS") SPRING_MASS = atof(text_line.c_str());
+	else if (option == "INERTIA_CG") INERTIA_CG = atof(text_line.c_str());
+	else if (option == "INERTIA_FLEXURAL") INERTIA_FLEXURAL = atof(text_line.c_str());
+	else if (option == "SPRING_STIFFNESS") SPRING_STIFFNESS = atof(text_line.c_str());
 	else if (option == "SPRING_DAMPING") SPRING_DAMPING = atof(text_line.c_str());
 	else if (option == "TORSIONAL_STIFFNESS") TORSIONAL_STIFFNESS = atof(text_line.c_str());
 	else if (option == "TORSIONAL_DAMPING") TORSIONAL_DAMPING = atof(text_line.c_str());
 	else if (option == "CORD") CORD = atof(text_line.c_str());
 	else if (option == "FLEXURAL_AXIS") FLEXURAL_AXIS = atof(text_line.c_str());
+	else if (option == "GRAVITY_CENTER") GRAVITY_CENTER = atof(text_line.c_str());
+    else if (option == "INITIAL_DISP") INITIAL_DISP = atof(text_line.c_str());
+    else if (option == "INITIAL_ANGLE") INITIAL_ANGLE = atof(text_line.c_str());
 	else if (option == "START_TIME") START_TIME = atof(text_line.c_str());
 	else if (option == "DELTA_T") DELTA_T = atof(text_line.c_str());
 	else if (option == "STOP_TIME") STOP_TIME = atof(text_line.c_str());
@@ -132,42 +137,47 @@ std::string Config::GetRestartFile()
     return RESTART_FILE;
 }
 
-double Config::GetStartTime()
-{
+double Config::GetStartTime(){
     return START_TIME;
 }
-double Config::GetDeltaT()
-{
+
+double Config::GetDeltaT(){
     return DELTA_T;
 }
-double Config::GetStopTime()
-{
+
+double Config::GetStopTime(){
     return STOP_TIME;
 }
-double Config::GetFrequency()
-{
+
+double Config::GetFrequency(){
     return FREQUENCY;
 }
-double Config::GetAmplitude()
-{
+
+double Config::GetAmplitude(){
     return AMPLITUDE;
 }
 
-double Config::GetConstantForceValue()
-{
+double Config::GetConstantForceValue(){
     return CONSTANT_FORCE_VALUE;
 }
 
-double Config::GetSpringStiffness()
-{
+double Config::GetSpringStiffness(){
     return SPRING_STIFFNESS;
 }
-double Config::GetSpringMass()
-{
+
+double Config::GetSpringMass(){
     return SPRING_MASS;
 }
-double Config::GetSpringDamping()
-{
+
+double Config::GetInertiaCG(){
+    return INERTIA_CG;
+}
+
+double Config::GetInertiaFlexural(){
+    return INERTIA_FLEXURAL;
+}
+
+double Config::GetSpringDamping(){
     return SPRING_DAMPING;
 }
 
@@ -187,12 +197,22 @@ double Config::GetFlexuralAxis(){
   return FLEXURAL_AXIS;
 }
 
-double Config::GetAlpha()
-{
+double Config::GetGravityCenter(){
+    return GRAVITY_CENTER;
+}
+
+double Config::GetInitialDisp(){
+  return INITIAL_DISP;
+}
+
+double Config::GetInitialAngle(){
+  return INITIAL_ANGLE;
+}
+
+double Config::GetAlpha(){
     return ALPHA;
 }
 
-double Config::GetRho()
-{
+double Config::GetRho(){
     return RHO;
 }

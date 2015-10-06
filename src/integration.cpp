@@ -69,6 +69,12 @@ CVector* Integration::GetVel_n() const{
   return qdot_n;
 }
 
+CVector* Integration::GetLoads() const{
+
+  return Loads;
+
+}
+
 void Integration::SetIntegrationParam(Config* config){
 
   totTime = config->GetStopTime();
@@ -234,6 +240,13 @@ void Integration::SetInitialConditions(Config* config, Structure* structure){
     cout << "Setting basic initial conditions" << endl;
     SetLoadsAtTime(config, structure, 0.0, 0.0);
     q->Reset();
+    q_n->Reset();
+    cout << "Read initial configuration" << endl;
+    (*q)[0] = config->GetInitialDisp();
+    if(structure->GetnDof() == 2) (*q)[1] = config->GetInitialAngle();
+    cout << "Initial plunging displacement : " << (*q)[0] << endl;
+    cout << "Initial pitching displacement : " << (*q)[1] << endl;
+
     qdot->Reset();
     qddot->Reset();
     *RHS += *Loads;
@@ -242,6 +255,8 @@ void Integration::SetInitialConditions(Config* config, Structure* structure){
     SolveSys(structure->GetM(),RHS);
     *qddot = *RHS;
     *a = *qddot;
+    cout << (*q)[0] << endl;
+    cout << (*q)[1] << endl;
   }
 
   delete RHS;

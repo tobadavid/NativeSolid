@@ -1,17 +1,24 @@
 Installation of NativeSolid code
 
-Comments :
-*You will need CMAKE installed (~sudo apt-get install cmake)
+Tools required :
+*CMAKE  (~sudo apt-get install cmake)
+*LAPACK/LAPACKE (liblapacke.so & lapacke.h)
+*CBLAS (libcblas.a & cblas.h)
+*C/C++ compiler (GCC)
+*MPI implementatin (OpenMPI)
 
-1. Create and go to the build folder
+1. Go to the CMake folder and set the right paths for headers and libraries in the FindCBLAS and FindLAPACKE files
+2. Create and go to the build folder
 	$ mkdir build
 	$ cd build 
    and check that it is empty. If not : 
 	$ rm -r *
-2. Execute : 
+3. Execute : 
 	$ cmake ..  
    for configuration.
-3. If no error, execute : 
+4. If no error, execute : 
 	$ make  (you can do : $ make -j numthreads  , for multi-threads compilation)
-4. Set your environment variable in you .bashrc file as :
-	export PATH=$PATH:INSTALL_PATH/NativeSolid/bin
+5. Set your environment variable in you .bashrc file as :
+	export NATIVE_RUN="INSTALL_PATH/NativeSolid/bin"
+	export PATH=$PATH:$NATIVE_RUN
+	export PYTHONPATH=$PYTHONPATH:$NATIVE_RUN

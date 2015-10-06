@@ -9,8 +9,8 @@ ADD_LIBRARY(Native SHARED ../include/config.h ../include/integration.h ../includ
 INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/api
 )
 
-TARGET_LINK_LIBRARIES(Native lapacke blas )
+TARGET_LINK_LIBRARIES(Native lapacke cblas)
 
 ADD_EXECUTABLE(NativeSolid ../include/Native.h ../api/main.cpp)
 
-TARGET_LINK_LIBRARIES(NativeSolid Native lapacke blas )
+TARGET_LINK_LIBRARIES(NativeSolid Native )

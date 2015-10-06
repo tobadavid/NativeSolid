@@ -14,9 +14,12 @@ protected:
     double Ch;
     double Ca;
     double c;
+    double b;
     double xf;
+    double xCG;
     double S;
-    double Ia;
+    double ICG;
+    double If;
     CMatrix* M;
     CMatrix* C;
     CMatrix* K;
