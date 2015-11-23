@@ -69,6 +69,14 @@ CVector* Integration::GetVel_n() const{
   return qdot_n;
 }
 
+CVector* Integration::GetAcc_n() const{
+  return qddot_n;
+}
+
+CVector* Integration::GetAccVar_n() const{
+  return a_n;
+}
+
 CVector* Integration::GetLoads() const{
 
   return Loads;
@@ -205,36 +213,75 @@ void Integration::SetInitialConditions(Config* config, Structure* structure){
     string delimiter = "\t";
     ifstream InputFile;
     InputFile.open(InputFileName.c_str(), ios::in);
-    double buffer[4*structure->GetnDof()];
+    double buffer[(4*structure->GetnDof())+1];
+    int kk = 0;
+    int jj;
 	while (getline(InputFile,text_line)){
       tempString = text_line;
+      jj = 0;
+      if (kk == 1){
+        while ((pos = tempString.find(delimiter)) != string::npos){
+          token = tempString.substr(0,pos);
+          tempString.erase(0,pos+delimiter.length());
+          buffer[jj] = atof(token.c_str());
+          jj += 1;
+        }
+	    buffer[jj] = atof(tempString.c_str());
+
+	    if(structure->GetnDof() == 1){
+	      (*q_n)[0] = buffer[1];
+	      (*qdot_n)[0] = buffer[2];
+          (*qddot_n)[0] = buffer[3];
+	      (*a_n)[0] = buffer[4];
+	    }
+	    else if (structure->GetnDof() == 2){
+	      (*q_n)[0] = buffer[1];
+	      (*q_n)[1] = buffer[2];
+	      (*qdot_n)[0] = buffer[3];
+	      (*qdot_n)[1] = buffer[4];
+	      (*qddot_n)[0] = buffer[5];
+	      (*qddot_n)[1] = buffer[6];
+	      (*a_n)[0] = buffer[7];
+	      (*a_n)[1] = buffer[8];
+	    }
+	    q_n->print();
+	    qdot_n->print();
+	    qddot_n->print();
+	    a_n->print();
+      }
+      else if (kk == 2){
+        while ((pos = tempString.find(delimiter)) != string::npos){
+          token = tempString.substr(0,pos);
+          tempString.erase(0,pos+delimiter.length());
+          buffer[jj] = atof(token.c_str());
+          jj += 1;
+        }
+	    buffer[jj] = atof(tempString.c_str());
+
+	    if(structure->GetnDof() == 1){
+	      (*q)[0] = buffer[1];
+	      (*qdot)[0] = buffer[2];
+          (*qddot)[0] = buffer[3];
+	      (*a)[0] = buffer[4];
+	    }
+	    else if (structure->GetnDof() == 2){
+	      (*q)[0] = buffer[1];
+	      (*q)[1] = buffer[2];
+	      (*qdot)[0] = buffer[3];
+	      (*qdot)[1] = buffer[4];
+	      (*qddot)[0] = buffer[5];
+	      (*qddot)[1] = buffer[6];
+	      (*a)[0] = buffer[7];
+	      (*a)[1] = buffer[8];
+	    }
+	    q->print();
+	    qdot->print();
+	    qddot->print();
+	    a->print();
+      }
+      kk += 1;
     }
     InputFile.close();
-    int jj = 0;
-    while ((pos = tempString.find(delimiter)) != string::npos){
-      token = tempString.substr(0,pos);
-      tempString.erase(0,pos+delimiter.length());
-      buffer[jj] = atof(token.c_str());
-      jj += 1;
-    }
-	buffer[jj] = atof(tempString.c_str());
-
-	if(structure->GetnDof() == 1){
-	  (*q)[0] = buffer[0];
-	  (*qdot)[0] = buffer[1];
-	  (*qddot)[0] = buffer[2];
-	  (*a)[0] = buffer[3];
-	}
-	else if (structure->GetnDof() == 2){
-	  (*q)[0] = buffer[0];
-	  (*q)[1] = buffer[1];
-	  (*qdot)[0] = buffer[2];
-	  (*qdot)[1] = buffer[3];
-	  (*qddot)[0] = buffer[4];
-	  (*qddot)[1] = buffer[5];
-	  (*a)[0] = buffer[6];
-	  (*a)[1] = buffer[7];
-	}
   }
   else{
     cout << "Setting basic initial conditions" << endl;
@@ -255,9 +302,11 @@ void Integration::SetInitialConditions(Config* config, Structure* structure){
     SolveSys(structure->GetM(),RHS);
     *qddot = *RHS;
     *a = *qddot;
-    cout << (*q)[0] << endl;
-    cout << (*q)[1] << endl;
+    //cout << (*q)[0] << endl;
+    //cout << (*q)[1] << endl;
   }
+
+  structure->SetCenterOfRotation_Y((*q)[0]);
 
   delete RHS;
   RHS = NULL;
@@ -335,6 +384,7 @@ void Integration::StaticIteration(Config *config, Structure *structure){
 }
 
 void Integration::UpdateSolution(){
+
   *q_n = *q;
   q->Reset();
   *qdot_n = *qdot;

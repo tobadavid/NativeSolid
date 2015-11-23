@@ -3,6 +3,9 @@
 #include <cblas.h>
 #include <lapacke.h>
 
+#define ROW_MAJ 0
+#define COL_MAJ 1
+
 class CVector {
 
 protected:
@@ -68,3 +71,6 @@ CVector MatVecProd(CMatrix* A, CVector* b);
 CVector ScalVecProd(const double & scal, CVector* b);
 CMatrix ScalMatProd(const double & scal, CMatrix* A);
 int SolveSys(CMatrix *A, CVector *b);
+
+void MatrixToVec(int order, double** matrix, double* vecteur, int Nrow, int Ncol, int sizeVec);
+void VecToMatrix(int order, double** matrix, double* vecteur, int Nrow, int Ncol, int sizeVec);

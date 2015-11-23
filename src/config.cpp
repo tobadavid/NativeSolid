@@ -48,6 +48,7 @@ void Config::ReadConfig()
         option.erase(remove(option.begin(), option.end(), ' '), option.end());
 	text_line.erase(remove(text_line.begin(), text_line.end(),' '),text_line.end());
 	if (option == "CSD_SOLVER") CSD_SOLVER = text_line;
+	else if (option == "MESH_FILE") MESH_FILE = text_line;
 	else if (option == "UNSTEADY_SIMULATION") UNSTEADY_SIMULATION = text_line;
 	else if (option == "STRUCT_TYPE") STRUCT_TYPE = text_line;
 	else if (option == "FORCE_INPUT_TYPE") FORCE_INPUT_TYPE = text_line;
@@ -56,6 +57,7 @@ void Config::ReadConfig()
 	else if (option == "INTEGRATION_ALGO") INTEGRATION_ALGO = text_line;
     else if (option == "RESTART_SOL") RESTART_SOL = text_line;
 	else if (option == "RESTART_FILE") RESTART_FILE = text_line;
+	else if (option == "MOVING_MARKER") MOVING_MARKER = text_line;
 	else if (option == "SPRING_MASS") SPRING_MASS = atof(text_line.c_str());
 	else if (option == "INERTIA_CG") INERTIA_CG = atof(text_line.c_str());
 	else if (option == "INERTIA_FLEXURAL") INERTIA_FLEXURAL = atof(text_line.c_str());
@@ -70,6 +72,7 @@ void Config::ReadConfig()
     else if (option == "INITIAL_ANGLE") INITIAL_ANGLE = atof(text_line.c_str());
 	else if (option == "START_TIME") START_TIME = atof(text_line.c_str());
 	else if (option == "DELTA_T") DELTA_T = atof(text_line.c_str());
+	else if (option == "DELTA_ITER_WRITE") DELTAITERWRITE = atol(text_line.c_str());
 	else if (option == "STOP_TIME") STOP_TIME = atof(text_line.c_str());
 	else if (option == "AMPLITUDE") AMPLITUDE = atof(text_line.c_str());
 	else if (option == "FREQUENCY") FREQUENCY = atof(text_line.c_str());
@@ -90,6 +93,11 @@ void Config::ReadConfig()
     if (STRUCT_TYPE == "SPRING_HOR" || STRUCT_TYPE == "SPRING_VER") cout << "Structural model is a plunging spring" << endl;
     else if (STRUCT_TYPE == "AIRFOIL") cout << "Structural model is a pitching plunging airfoil" << endl;
     else cout << "The specified structural model is not recognized or implemented yet !" << endl;
+}
+
+std::string Config::GetMeshFile()
+{
+    return MESH_FILE;
 }
 
 std::string Config::GetUnsteady()
@@ -137,12 +145,21 @@ std::string Config::GetRestartFile()
     return RESTART_FILE;
 }
 
+std::string Config::GetMovingMarker()
+{
+    return MOVING_MARKER;
+}
+
 double Config::GetStartTime(){
     return START_TIME;
 }
 
 double Config::GetDeltaT(){
     return DELTA_T;
+}
+
+unsigned long Config::GetDeltaIterWrite(){
+    return DELTAITERWRITE;
 }
 
 double Config::GetStopTime(){

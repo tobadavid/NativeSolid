@@ -9,6 +9,16 @@
 using namespace std;
 
 Structure::Structure(Config* config){
+
+  centerOfRotation[0] = 0.0;
+  centerOfRotation[1] = 0.0;
+  centerOfRotation[2] = 0.0;
+
+  centerOfRotation_n[0] = 0.0;
+  centerOfRotation_n[1] = 0.0;
+  centerOfRotation_n[2] = 0.0;
+
+
   if(config->GetStructType() == "SPRING_HOR" || config->GetStructType() == "SPRING_VER" ){
     nDof = 1;
     m = config->GetSpringMass();
@@ -44,6 +54,9 @@ Structure::Structure(Config* config){
     //Ia = 1.0/3.0*m*(c*c-3*c*xf+3*xf*xf);
     cout << "Setting pitching-plunging airfoil system" << endl;
     cout << "Number of DOF : " << nDof << endl;
+
+    centerOfRotation[0] = xf;
+    centerOfRotation_n[0] = xf;
   }
   else nDof = 0;
 
@@ -105,6 +118,58 @@ CMatrix* Structure::GetC(){
 
 CMatrix* Structure::GetK(){
   return K;
+}
+
+void Structure::SetCenterOfRotation_X(double coord_x){
+  centerOfRotation[0] = coord_x;
+}
+
+void Structure::SetCenterOfRotation_Y(double coord_y){
+  centerOfRotation[1] = coord_y;
+}
+
+void Structure::SetCenterOfRotation_Z(double coord_z){
+  centerOfRotation[2] = coord_z;
+}
+
+double Structure::GetCenterOfRotation_x() const{
+  return  centerOfRotation[0];
+}
+
+double Structure::GetCenterOfRotation_y() const{
+  return centerOfRotation[1];
+}
+
+double Structure::GetCenterOfRotation_z() const{
+  return centerOfRotation[2];
+}
+
+const double* Structure::GetCenterOfRotation() const{
+  return centerOfRotation;
+}
+
+void Structure::SetCenterOfRotation_n_X(double coord_x){
+  centerOfRotation_n[0] = coord_x;
+}
+
+void Structure::SetCenterOfRotation_n_Y(double coord_y){
+  centerOfRotation_n[1] = coord_y;
+}
+
+void Structure::SetCenterOfRotation_n_Z(double coord_z){
+  centerOfRotation_n[2] = coord_z;
+}
+
+double Structure::GetCenterOfRotation_n_x() const{
+  return  centerOfRotation_n[0];
+}
+
+double Structure::GetCenterOfRotation_n_y() const{
+  return centerOfRotation_n[1];
+}
+
+double Structure::GetCenterOfRotation_n_z() const{
+  return centerOfRotation_n[2];
 }
 
 unsigned int Structure::GetnDof(){

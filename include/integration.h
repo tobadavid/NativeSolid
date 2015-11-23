@@ -43,6 +43,8 @@ public:
     CVector* GetAccVar() const;
     CVector* GetDisp_n() const;
     CVector* GetVel_n() const;
+    CVector* GetAcc_n() const;
+    CVector* GetAccVar_n() const;
     CVector* GetLoads() const;
     void SetIntegrationParam(Config* config);
     void SetLoadsAtTime(Config* config, Structure* structure, const double & time, double FSI_Load);

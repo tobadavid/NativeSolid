@@ -373,3 +373,35 @@ int SolveSys(CMatrix *A, CVector *b){
   delete Mat;
   Mat = NULL;
 }
+
+void MatrixToVec(int order, double** matrix, double* vecteur, int Nrow, int Ncol, int sizeVec){
+    if(order == COL_MAJ){
+      for(int j=0; j<sizeVec; j++)
+        vecteur[j] = matrix[j%Nrow][j/Nrow];
+    }
+    else if(order == ROW_MAJ){
+      for(int j=0; j<sizeVec; j++)
+        vecteur[j] = matrix[j/Ncol][j%Ncol];
+    }
+    else{
+      cerr << "Wrong storage order" << endl;
+      throw(-1);
+    }
+}
+
+void VecToMatrix(int order, double** matrix, double* vecteur, int Nrow, int Ncol, int sizeVec){
+    if(order == COL_MAJ){
+      for(int i=0; i<Nrow;i++)
+        for(int j=0; j<Ncol; j++)
+          matrix[i][j] = vecteur[j*Nrow+i];
+    }
+    else if(order == ROW_MAJ){
+      for(int i=0; i<Nrow;i++)
+        for(int j=0; j<Ncol; j++)
+          matrix[i][j] = vecteur[i*Ncol+j];
+    }
+    else{
+      cerr << "Wrong storage order" << endl;
+      throw(-1);
+    }
+}
