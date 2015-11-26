@@ -56,14 +56,20 @@ void NativeSolidSolver::initialize(bool FSIComp){
       if(geometry->GetMarkersMoving(iMarker)){
         nSolidInterfaceVertex = geometry->nVertex[iMarker];
         solidInterface = new double*[nSolidInterfaceVertex];
+        solidSurfaceLoads = new double*[nSolidInterfaceVertex];
         for(int iVertex=0; iVertex<nSolidInterfaceVertex; iVertex++){
           solidInterface[iVertex] = new double[4];
+          solidSurfaceLoads[iVertex] = new double[4];
           solidInterface[iVertex][0] = geometry->vertex[iMarker][iVertex];
+          solidSurfaceLoads[iVertex][0] = geometry->vertex[iMarker][iVertex];
           iPoint = solidInterface[iVertex][0];
           Coord = geometry->node[iPoint]->GetCoord();
           solidInterface[iVertex][1] = Coord[0];
           solidInterface[iVertex][2] = Coord[1];
           solidInterface[iVertex][3] = Coord[2];
+          solidSurfaceLoads[iVertex][1] = 0.0;
+          solidSurfaceLoads[iVertex][2] = 0.0;
+          solidSurfaceLoads[iVertex][3] = 0.0;
         }
       break;
       }
@@ -165,7 +171,15 @@ double* NativeSolidSolver::getGlobalFluidLoadsArray() const{
 
 }
 
+double** NativeSolidSolver::getSolidSurfaceLoads() const{
+  return solidSurfaceLoads;
+}
+
 void NativeSolidSolver::applyGlobalFluidLoads(){
+
+  double Fx(0.0), Fy(0.0), Fz(0.0), Mx(0.0), My(0.0), Mz(0.0);
+  double Center[3], *Coord;
+  unsigned long iMarker, iVertex, iPoint;
 
   if(config->GetStructType() == "SPRING_HOR"){
     ((solver->GetLoads())->GetVec())[0] = globalFluidLoads[1];
@@ -174,8 +188,33 @@ void NativeSolidSolver::applyGlobalFluidLoads(){
     ((solver->GetLoads())->GetVec())[0] = globalFluidLoads[0];
   }
   else if(config->GetStructType() == "AIRFOIL"){
-    ((solver->GetLoads())->GetVec())[0] = -globalFluidLoads[0];
-    ((solver->GetLoads())->GetVec())[1] = -globalFluidLoads[2];
+
+    Center[0] = structure->GetCenterOfRotation_x();
+    Center[1] = structure->GetCenterOfRotation_y();
+    Center[2] = structure->GetCenterOfRotation_z();
+
+    for(iMarker = 0; iMarker < geometry->GetnMarkers(); iMarker++){
+    if (geometry->markersMoving[iMarker] == true){
+      for(iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++){
+        iPoint = geometry->vertex[iMarker][iVertex];
+        Coord = geometry->node[iPoint]->GetCoord();
+        Fx += solidSurfaceLoads[iVertex][1];
+        Fy += solidSurfaceLoads[iVertex][2];
+        Fz += solidSurfaceLoads[iVertex][3];
+        Mz += (solidSurfaceLoads[iVertex][2]*(Coord[0]-Center[0])-solidSurfaceLoads[iVertex][1]*(Coord[1]-Center[1]));
+      }
+    }
+    }
+
+    //((solver->GetLoads())->GetVec())[0] = -globalFluidLoads[0];
+    //((solver->GetLoads())->GetVec())[1] = -globalFluidLoads[2];
+    ((solver->GetLoads())->GetVec())[0] = -Fy;
+    ((solver->GetLoads())->GetVec())[1] = -Mz;
+
+    /*cout << "Mesh drag : " << Fx << endl;
+    cout << "RBM lift : " << globalFluidLoads[0] << " Mesh lift : " << Fy << endl;
+    cout << "Mesh Fz : " << Fz << endl;
+    cout << "RBM moment : " << globalFluidLoads[2] << " Mesh Mz : " << Mz << endl;*/
   }
   else{
     cerr << "Wrong structural type for applying global fluild loads !" << endl;
@@ -351,12 +390,12 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
               + rotMatrix[2][2]*r[2];
 
               //cout << rotCoord[2] << endl;
-        if(solidInterface[iVertex][0] == 0) cout << "VarCoord : " << endl;
+        //if(solidInterface[iVertex][0] == 0) cout << "VarCoord : " << endl;
         for(int iDim=0; iDim < nDim; iDim++){
                 newCoord[iDim] = newCenter[iDim] + rotCoord[iDim];
                 solidInterface[iVertex][iDim+1] = newCoord[iDim];
                 varCoord[iDim] = newCoord[iDim] - Coord[iDim];
-                if(solidInterface[iVertex][0] == 0)cout << varCoord[iDim] << endl;
+                //if(solidInterface[iVertex][0] == 0)cout << varCoord[iDim] << endl;
         }
 
         /*--- Apply change of coordinates to the node on the moving interface ---*/

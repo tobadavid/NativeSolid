@@ -26,7 +26,7 @@ protected:
     CVector* q_uM1; //The displacement at the previous FSI iteration
     double omega;
     double* globalFluidLoads; //Used for communications with FluidSolver !!
-    double** solidInterface;
+    double **solidInterface, **solidSurfaceLoads;
     double* solidInterfaceBuffer;
     unsigned long nSolidInterfaceVertex;
 
@@ -38,6 +38,7 @@ public:
     void inputFluidLoads(double currentTime, double FSI_Load);
     double* getGlobalFluidLoadsArray() const;
     double** getSolidInterface() const;
+    double** getSolidSurfaceLoads() const;
     const double* getCenterCoordinate() const;
     unsigned long getnSolidInterfaceVertex() const;
     void applyGlobalFluidLoads();
