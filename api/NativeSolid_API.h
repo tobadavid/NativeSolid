@@ -29,6 +29,7 @@ protected:
     double **solidInterface, **solidSurfaceLoads;
     double* solidInterfaceBuffer;
     unsigned long nSolidInterfaceVertex;
+    double varCoordNorm;
 
 public:
     NativeSolidSolver(std::string str);
@@ -36,6 +37,7 @@ public:
     void initialize(bool FSIComp);
     void exit();
     void inputFluidLoads(double currentTime, double FSI_Load);
+    double getVarCoordNorm() const;
     double* getGlobalFluidLoadsArray() const;
     double** getSolidInterface() const;
     double** getSolidSurfaceLoads() const;

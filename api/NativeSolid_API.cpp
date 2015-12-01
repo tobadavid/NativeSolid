@@ -76,6 +76,8 @@ void NativeSolidSolver::initialize(bool FSIComp){
       iMarker++;
     }
 
+    varCoordNorm = 0.0;
+
     cout << nSolidInterfaceVertex << " nodes on the moving interface have to be tracked." << endl;
 
     /*for(int iVertex = 0; iVertex<nSolidInterfaceVertex; iVertex++){
@@ -162,6 +164,12 @@ void NativeSolidSolver::exit(){
 void NativeSolidSolver::inputFluidLoads(double currentTime, double FSI_Load){
 
   solver->SetLoadsAtTime(config, structure, currentTime, FSI_Load);
+
+}
+
+double NativeSolidSolver::getVarCoordNorm() const{
+
+  return varCoordNorm;
 
 }
 
@@ -252,7 +260,8 @@ void NativeSolidSolver::timeIteration(double currentTime){
 
 void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
 
-  double *Coord, *Coord_n, newCoord[3], Center[3], Center_n[3], newCenter[3], rotCoord[3], r[3], varCoord[3];
+  double *Coord, *Coord_n, newCoord[3], Center[3], Center_n[3], newCenter[3], rotCoord[3], r[3];
+  double varCoord[3] = {0.0, 0.0, 0.0};
   double rotMatrix[3][3] = {{0.0,0.0,0.0}, {0.0,0.0,0.0}, {0.0,0.0,0.0}};
   double dTheta, dPhi, dPsi;
   double cosTheta, sinTheta, cosPhi, sinPhi, cosPsi, sinPsi;
@@ -263,6 +272,7 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
   double alpha_n, alphadot_n, alphadot_nM1, alpha_nP1;
   double alpha0, alpha1;
   double disp, dAlpha;
+  double varCoordNorm2(0.0);
 
   /*--- Get the current center of rotation (can vary at each iteration) ---*/
   Center[0] = structure->GetCenterOfRotation_x();
@@ -398,6 +408,8 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
                 //if(solidInterface[iVertex][0] == 0)cout << varCoord[iDim] << endl;
         }
 
+        varCoordNorm2 += varCoord[0]*varCoord[0] + varCoord[1]*varCoord[1] + varCoord[2]*varCoord[2];
+
         /*--- Apply change of coordinates to the node on the moving interface ---*/
         //if(!prediction) geometry->node[iPoint]->SetCoord(newCoord);
         geometry->node[iPoint]->SetCoord(newCoord);
@@ -412,6 +424,8 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
       }
     }
   }
+
+  varCoordNorm = sqrt(varCoordNorm2);
 
   /*--- Update the position of the center of rotation ---*/
   //if(!prediction){
