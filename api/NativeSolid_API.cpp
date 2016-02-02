@@ -90,7 +90,7 @@ void NativeSolidSolver::initialize(bool FSIComp){
     if(config->GetUnsteady() == "YES"){
       solver->SetIntegrationParam(config);
       solver->SetInitialConditions(config, structure);
-      mapRigidBodyMotion(false, true);          //The mesh is already set in the solid side
+      //mapRigidBodyMotion(false, true);          //The mesh is already set in the solid side
     }
 
     cout << endl << "\n----------------------- Setting FSI features ----------------------" << endl;
@@ -413,6 +413,7 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
         /*--- Apply change of coordinates to the node on the moving interface ---*/
         //if(!prediction) geometry->node[iPoint]->SetCoord(newCoord);
         geometry->node[iPoint]->SetCoord(newCoord);
+
         /*--- At initialisation, propagate the initial position of the inteface in the past ---*/
         if(initialize) geometry->node[iPoint]->SetCoord_n(newCoord);
         //cout << "**********************************************" << endl;
@@ -434,6 +435,10 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
   structure->SetCenterOfRotation_Z(newCenter[2]);
   //}
 
+}
+
+void NativeSolidSolver::setInitialDisplacements(){
+  mapRigidBodyMotion(false, true);
 }
 
 void NativeSolidSolver::staticComputation(){

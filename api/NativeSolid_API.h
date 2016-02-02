@@ -46,6 +46,7 @@ public:
     void applyGlobalFluidLoads();
     void timeIteration(double currentTime);
     void mapRigidBodyMotion(bool predicition, bool initialize);
+    void setInitialDisplacements();
     void staticComputation();
     void writeSolution(double currentTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter);
     void updateSolution();
