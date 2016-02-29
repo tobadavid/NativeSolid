@@ -219,6 +219,9 @@ void NativeSolidSolver::applyGlobalFluidLoads(){
     ((solver->GetLoads())->GetVec())[0] = -Fy;
     ((solver->GetLoads())->GetVec())[1] = -Mz;
 
+    cout << "RBM lift : " << Fy << endl;
+    //cout << "RBM moment : " << globalFluidLoads[2] << " Mesh Mz : " << Mz << endl;
+
     /*cout << "Mesh drag : " << Fx << endl;
     cout << "RBM lift : " << globalFluidLoads[0] << " Mesh lift : " << Fy << endl;
     cout << "Mesh Fz : " << Fz << endl;
