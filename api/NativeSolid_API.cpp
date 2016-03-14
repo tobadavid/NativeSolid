@@ -6,17 +6,10 @@ using namespace std;
 const int MASTER_NODE = 0;
 
 
-NativeSolidSolver::NativeSolidSolver(string str):confFile(str){
+NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp):confFile(str){
 
-}
-
-NativeSolidSolver::~NativeSolidSolver(){}
-
-void NativeSolidSolver::initialize(bool FSIComp){
-
-  int rank = MASTER_NODE;
+int rank = MASTER_NODE;
   int size = 1;
-  //double currentTime(0),totTime(0),deltaT(0);
 
   historyFile.open("NativeHistory.dat", ios::out);
 
@@ -55,22 +48,6 @@ void NativeSolidSolver::initialize(bool FSIComp){
     while(iMarker < geometry->GetnMarkers()){
       if(geometry->GetMarkersMoving(iMarker)){
         nSolidInterfaceVertex = geometry->nVertex[iMarker];
-        solidInterface = new double*[nSolidInterfaceVertex];
-        solidSurfaceLoads = new double*[nSolidInterfaceVertex];
-        for(int iVertex=0; iVertex<nSolidInterfaceVertex; iVertex++){
-          solidInterface[iVertex] = new double[4];
-          solidSurfaceLoads[iVertex] = new double[4];
-          solidInterface[iVertex][0] = geometry->vertex[iMarker][iVertex];
-          solidSurfaceLoads[iVertex][0] = geometry->vertex[iMarker][iVertex];
-          iPoint = solidInterface[iVertex][0];
-          Coord = geometry->node[iPoint]->GetCoord();
-          solidInterface[iVertex][1] = Coord[0];
-          solidInterface[iVertex][2] = Coord[1];
-          solidInterface[iVertex][3] = Coord[2];
-          solidSurfaceLoads[iVertex][1] = 0.0;
-          solidSurfaceLoads[iVertex][2] = 0.0;
-          solidSurfaceLoads[iVertex][3] = 0.0;
-        }
       break;
       }
       iMarker++;
@@ -80,26 +57,17 @@ void NativeSolidSolver::initialize(bool FSIComp){
 
     cout << nSolidInterfaceVertex << " nodes on the moving interface have to be tracked." << endl;
 
-    /*for(int iVertex = 0; iVertex<nSolidInterfaceVertex; iVertex++){
-      cout << solidInterface[iVertex][0] << ";" << solidInterface[iVertex][1] << ";" << solidInterface[iVertex][2] << ";" << solidInterface[iVertex][3] << endl;
-    }*/
-
     /*--- Initialize the temporal integrator ---*/
     cout << endl << "\n----------------------- Setting integration parameter ----------------------" << endl;
     solver = new Integration(structure);
     if(config->GetUnsteady() == "YES"){
       solver->SetIntegrationParam(config);
       solver->SetInitialConditions(config, structure);
-      //mapRigidBodyMotion(false, true);          //The mesh is already set in the solid side
     }
 
     cout << endl << "\n----------------------- Setting FSI features ----------------------" << endl;
     q_uM1 = new CVector(structure->GetnDof());
     q_uM1->Reset();
-    globalFluidLoads = new double[3];
-    globalFluidLoads[0] = 0.0;
-    globalFluidLoads[1] = 0.0;
-    globalFluidLoads[2] = 0.0;
 
     if(rank == MASTER_NODE){
       if(structure->GetnDof() == 1){
@@ -127,6 +95,8 @@ void NativeSolidSolver::initialize(bool FSIComp){
 
 }
 
+NativeSolidSolver::~NativeSolidSolver(){}
+
 void NativeSolidSolver::exit(){
 
   int rank = MASTER_NODE;
@@ -149,88 +119,12 @@ void NativeSolidSolver::exit(){
   delete solver;
   delete output;
   delete q_uM1;
-  delete [] globalFluidLoads;
-
-  if(solidInterface != NULL){
-    for(int iVertex=0; iVertex<nSolidInterfaceVertex; iVertex++){
-      delete [] solidInterface[iVertex];
-    }
-
-    delete [] solidInterface;
-  }
-
-}
-
-void NativeSolidSolver::inputFluidLoads(double currentTime, double FSI_Load){
-
-  solver->SetLoadsAtTime(config, structure, currentTime, FSI_Load);
 
 }
 
 double NativeSolidSolver::getVarCoordNorm() const{
 
   return varCoordNorm;
-
-}
-
-double* NativeSolidSolver::getGlobalFluidLoadsArray() const{
-
-  return globalFluidLoads;
-
-}
-
-double** NativeSolidSolver::getSolidSurfaceLoads() const{
-  return solidSurfaceLoads;
-}
-
-void NativeSolidSolver::applyGlobalFluidLoads(){
-
-  double Fx(0.0), Fy(0.0), Fz(0.0), Mx(0.0), My(0.0), Mz(0.0);
-  double Center[3], *Coord;
-  unsigned long iMarker, iVertex, iPoint;
-
-  if(config->GetStructType() == "SPRING_HOR"){
-    ((solver->GetLoads())->GetVec())[0] = globalFluidLoads[1];
-  }
-  else if(config->GetStructType() == "SPRING_VER"){
-    ((solver->GetLoads())->GetVec())[0] = globalFluidLoads[0];
-  }
-  else if(config->GetStructType() == "AIRFOIL"){
-
-    Center[0] = structure->GetCenterOfRotation_x();
-    Center[1] = structure->GetCenterOfRotation_y();
-    Center[2] = structure->GetCenterOfRotation_z();
-
-    for(iMarker = 0; iMarker < geometry->GetnMarkers(); iMarker++){
-    if (geometry->markersMoving[iMarker] == true){
-      for(iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++){
-        iPoint = geometry->vertex[iMarker][iVertex];
-        Coord = geometry->node[iPoint]->GetCoord();
-        Fx += solidSurfaceLoads[iVertex][1];
-        Fy += solidSurfaceLoads[iVertex][2];
-        Fz += solidSurfaceLoads[iVertex][3];
-        Mz += (solidSurfaceLoads[iVertex][2]*(Coord[0]-Center[0])-solidSurfaceLoads[iVertex][1]*(Coord[1]-Center[1]));
-      }
-    }
-    }
-
-    //((solver->GetLoads())->GetVec())[0] = -globalFluidLoads[0];
-    //((solver->GetLoads())->GetVec())[1] = -globalFluidLoads[2];
-    ((solver->GetLoads())->GetVec())[0] = -Fy;
-    ((solver->GetLoads())->GetVec())[1] = -Mz;
-
-    cout << "RBM lift : " << Fy << endl;
-    //cout << "RBM moment : " << globalFluidLoads[2] << " Mesh Mz : " << Mz << endl;
-
-    /*cout << "Mesh drag : " << Fx << endl;
-    cout << "RBM lift : " << globalFluidLoads[0] << " Mesh lift : " << Fy << endl;
-    cout << "Mesh Fz : " << Fz << endl;
-    cout << "RBM moment : " << globalFluidLoads[2] << " Mesh Mz : " << Mz << endl;*/
-  }
-  else{
-    cerr << "Wrong structural type for applying global fluild loads !" << endl;
-    throw(-1);
-  }
 
 }
 
@@ -303,13 +197,6 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
       newCenter[1] = Center[1];
       newCenter[2] = Center[2];
     }
-
-    //cout << "Center of rotation at previous time step : " << Center_n[0] << " " << Center_n[1] << " " << Center_n[2] << endl;
-    //cout << "Current center of rotation : " << Center[0] << " " << Center[1] << " " << Center[2] << endl;
-
-
-
-    //cout << "New center of rotation : " << newCenter[0] << " " << newCenter[1] << " " << newCenter[2] << endl;
   }
   else{
     deltaT = config->GetDeltaT();
@@ -320,7 +207,6 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
     qdot_n = (*(solver->GetVel()))[0];
     qdot_nM1 = (*(solver->GetVel_n()))[0];
     q_nP1 = q_n + alpha0*deltaT*qdot_n + alpha1*deltaT*(qdot_n - qdot_nM1);
-    //cout << "Predicted position q : " << q_nP1 << endl;
     disp = q_nP1-q_n;
 
     if(structure->GetnDof() == 2){
@@ -328,7 +214,6 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
       alphadot_n = (*(solver->GetVel()))[1];
       alphadot_nM1 = (*(solver->GetVel_n()))[1];
       alpha_nP1 = alpha_n + alpha0*deltaT*alphadot_n + alpha1*deltaT*(alphadot_n - alphadot_nM1);
-      //cout << "Predicted position alpha : " << alpha_nP1 << endl;
       dAlpha = alpha_nP1-alpha_n;
     }
     dTheta = 0.0;
@@ -343,13 +228,6 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
       dPsi = 0.0;
     }
   }
-
-  /*if (config->GetStructType() == "AIRFOIL"){
-    cout << "Displacement communicated :" << endl;
-    cout << disp << endl;
-    cout << dPsi << endl;
-  }*/
-
 
   cosTheta = cos(dTheta);  cosPhi = cos(dPhi);  cosPsi = cos(dPsi);
   sinTheta = sin(dTheta);  sinPhi = sin(dPhi);  sinPsi = sin(dPsi);
@@ -386,9 +264,6 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
             r[iDim] = Coord[iDim] - Center[iDim];
           }
         }
-        //cout << Center[2] << endl;
-        //cout << Coord[2] << endl;
-        //if((r[0]*r[0]+r[1]*r[1]+r[2]*r[2])==0) cout << "PROBLEEEEEEEME" << endl;
 
         rotCoord[0] = rotMatrix[0][0]*r[0]
               + rotMatrix[0][1]*r[1]
@@ -402,29 +277,18 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
               + rotMatrix[2][1]*r[1]
               + rotMatrix[2][2]*r[2];
 
-              //cout << rotCoord[2] << endl;
-        //if(solidInterface[iVertex][0] == 0) cout << "VarCoord : " << endl;
         for(int iDim=0; iDim < nDim; iDim++){
                 newCoord[iDim] = newCenter[iDim] + rotCoord[iDim];
-                solidInterface[iVertex][iDim+1] = newCoord[iDim];
                 varCoord[iDim] = newCoord[iDim] - Coord[iDim];
-                //if(solidInterface[iVertex][0] == 0)cout << varCoord[iDim] << endl;
         }
 
         varCoordNorm2 += varCoord[0]*varCoord[0] + varCoord[1]*varCoord[1] + varCoord[2]*varCoord[2];
 
         /*--- Apply change of coordinates to the node on the moving interface ---*/
-        //if(!prediction) geometry->node[iPoint]->SetCoord(newCoord);
         geometry->node[iPoint]->SetCoord(newCoord);
 
         /*--- At initialisation, propagate the initial position of the inteface in the past ---*/
         if(initialize) geometry->node[iPoint]->SetCoord_n(newCoord);
-        //cout << "**********************************************" << endl;
-        //geometry->node[iPoint]->PrintCoord();
-        //cout << solidInterface[iVertex][0] << ";" << solidInterface[iVertex][1] << ";" << solidInterface[iVertex][2] << ";" << solidInterface[iVertex][3] << endl;
-        //solidInterface[iVertex][2] = Coord[1];
-        //solidInterface[iVertex][3] = Coord[2];
-
       }
     }
   }
@@ -432,12 +296,9 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
   varCoordNorm = sqrt(varCoordNorm2);
 
   /*--- Update the position of the center of rotation ---*/
-  //if(!prediction){
   structure->SetCenterOfRotation_X(newCenter[0]);
   structure->SetCenterOfRotation_Y(newCenter[1]);
   structure->SetCenterOfRotation_Z(newCenter[2]);
-  //}
-
 }
 
 void NativeSolidSolver::setInitialDisplacements(){
@@ -548,163 +409,117 @@ void NativeSolidSolver::updateGeometry(){
   }
 }
 
-void NativeSolidSolver::outputDisplacements(double* interfRigidDispArray, bool initialize){
-
-  double disp(0.0), dAlpha(0.0);
-
-  interfRigidDispArray[0] = 0.0;
-  interfRigidDispArray[1] = 0.0;
-  interfRigidDispArray[2] = 0.0;
-  interfRigidDispArray[3] = 0.0;
-  interfRigidDispArray[4] = 0.0;
-  interfRigidDispArray[5] = 0.0;
-
-  if(initialize){
-    if(config->GetUnsteady() == "YES"){
-      disp =  (*(solver->GetDisp()))[0];
-      if (structure->GetnDof() == 2)
-        dAlpha = (*(solver->GetDisp()))[1];
-    }
-    else{
-      disp = (*(solver->GetDisp()))[0];
-    }
-  }
-  else{
-    if(config->GetUnsteady() == "YES"){
-      disp =  ( (*(solver->GetDisp()))[0] - (*(solver->GetDisp_n()))[0]);
-      if (structure->GetnDof() == 2)
-        dAlpha =  ( (*(solver->GetDisp()))[1] - (*(solver->GetDisp_n()))[1]);
-    }
-    else{
-      disp =  ( (*(solver->GetDisp()))[0] - (*q_uM1)[0] );
-    }
-  }
-
-  if(config->GetStructType() == "SPRING_HOR")
-    interfRigidDispArray[0] = disp;
-  else if (config->GetStructType() == "SPRING_VER")
-    interfRigidDispArray[1] = disp;
-  else if (config->GetStructType() == "AIRFOIL"){
-    interfRigidDispArray[1] = -disp;
-    interfRigidDispArray[5] = -dAlpha;
-    cout << "Displacement communicated :" << endl;
-    cout << interfRigidDispArray[1] << endl;
-    cout << interfRigidDispArray[5] << endl;
-  }
-}
-
-void NativeSolidSolver::displacementPredictor_Old(double* interfRigidDispArray){
-
-  double deltaT, q_n, qdot_n, qdot_nM1, q_nP1;
-  double alpha_n, alphadot_n, alphadot_nM1, alpha_nP1;
-  double alpha0, alpha1;
-  double disp, dAlpha;
-
-  deltaT = config->GetDeltaT();
-  alpha0 = 1.0;
-  alpha1 = 0.5; //Second order prediction
-
-  q_n = (*(solver->GetDisp()))[0];
-  qdot_n = (*(solver->GetVel()))[0];
-  qdot_nM1 = (*(solver->GetVel_n()))[0];
-  q_nP1 = q_n + alpha0*deltaT*qdot_n + alpha1*deltaT*(qdot_n - qdot_nM1);
-  disp = q_nP1-q_n;
-  cout << "Predicted position q : " << q_nP1 << endl;
-
-  if(structure->GetnDof() == 2){
-    alpha_n = (*(solver->GetDisp()))[1];
-    alphadot_n = (*(solver->GetVel()))[1];
-    alphadot_nM1 = (*(solver->GetVel_n()))[1];
-    alpha_nP1 = alpha_n + alpha0*deltaT*alphadot_n + alpha1*deltaT*(alphadot_n - alphadot_nM1);
-    cout << "Predicted position alpha : " << alpha_nP1 << endl;
-    dAlpha = alpha_nP1-alpha_n;
-  }
-
-  if(config->GetStructType() == "SPRING_HOR")
-    interfRigidDispArray[0] = disp;
-  else if (config->GetStructType() == "SPRING_VER")
-    interfRigidDispArray[1] = disp;
-  else if (config->GetStructType() == "AIRFOIL"){
-    interfRigidDispArray[1] = -disp;
-    interfRigidDispArray[5] = -dAlpha;
-    cout << "Displacement communicated :" << endl;
-    cout << interfRigidDispArray[1] << endl;
-    cout << interfRigidDispArray[5] << endl;
-  }
-}
-
 void NativeSolidSolver::displacementPredictor(){
 
   mapRigidBodyMotion(true, false);
 
 }
 
-void NativeSolidSolver::setAitkenCoefficient(unsigned long FSIIter){
+unsigned short NativeSolidSolver::getFSIMarkerID(){
 
-  double u_uM1, u_pred, u_rel, q_pred, q_rel, q_nM1, lambda(0.0);
-
-  q_pred = (*(solver->GetDisp()))[0];
-
-  if(config->GetUnsteady() == "YES"){
+  unsigned short iMarker(0), IDtoSend;
 
 
-  q_nM1 = (*(solver->GetDisp_n()))[0];
-  u_pred = q_pred - q_nM1;
-
-  if(FSIIter == 0){
-    omega = 1.0;
-    (*q_uM1)[0] = q_pred;
-    q_rel = q_pred;
-
+  while(iMarker < geometry->GetnMarkers()){
+      if(geometry->GetMarkersMoving(iMarker)){
+          IDtoSend =  iMarker;
+          break;
+      }
+      iMarker++;
   }
-  else{
-    u_uM1 = (*q_uM1)[0] - q_nM1;
-
-    lambda = - (u_uM1)*(u_pred)/(pow(abs(u_pred - u_uM1),2));
-    omega *= lambda;
-    cout << omega << endl;
-    cout << u_uM1 << endl;
-
-    u_rel = omega*u_pred + (1-omega)*u_uM1;
-    u_uM1 = u_rel;
-
-    (*q_uM1)[0] = u_uM1 + q_nM1;
-    q_rel = u_rel + q_nM1;
-  }
-
-  }
-  else{
-    if(FSIIter == 0){
-      omega = 1.0;
-      q_rel = q_pred;
-    }
-    else{
-
-      lambda = -((*q_uM1)[0])*(q_pred)/(pow(abs(q_pred-(*q_uM1)[0]),2));
-      omega *= lambda;
-      cout << omega << endl;
-      cout << u_uM1 << endl;
-
-      q_rel = omega*q_pred + (1-omega)*((*q_uM1)[0]);
-    }
-  }
-
-  solver->SetDisp(q_rel);
-
+  return IDtoSend;
 }
 
-double NativeSolidSolver::aitkenRelaxation(){
-
-}
-
-double** NativeSolidSolver::getSolidInterface() const{
-  return solidInterface;
-}
-
-const double* NativeSolidSolver::getCenterCoordinate() const{
-  return structure->GetCenterOfRotation();
-}
-
-unsigned long NativeSolidSolver::getnSolidInterfaceVertex() const{
+unsigned long NativeSolidSolver::getNumberOfSolidInterfaceNodes(unsigned short iMarker){
   return nSolidInterfaceVertex;
+}
+
+unsigned int NativeSolidSolver::getInterfaceNodeGlobalIndex(unsigned short iMarker, unsigned short iVertex){
+
+  unsigned long iPoint;
+
+  iPoint = geometry->vertex[iMarker][iVertex];
+
+  return iPoint;
+}
+
+double NativeSolidSolver::getInterfaceNodePosX(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord();
+
+    return Coord[0];
+}
+
+double NativeSolidSolver::getInterfaceNodePosY(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord();
+
+    return Coord[1];
+}
+
+double NativeSolidSolver::getInterfaceNodePosZ(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord();
+
+    return 0.0; //3D is not really implemented in this solver...
+}
+
+double NativeSolidSolver::getRotationCenterPosX(){
+
+    return structure->GetCenterOfRotation_x();
+
+}
+
+double NativeSolidSolver::getRotationCenterPosY(){
+
+    return structure->GetCenterOfRotation_y();
+}
+
+double NativeSolidSolver::getRotationCenterPosZ(){
+
+    return structure->GetCenterOfRotation_z();
+}
+
+void NativeSolidSolver::setGeneralisedForce(double ForceX, double ForceY){
+
+  if(config->GetStructType() == "SPRING_HOR"){
+    ((solver->GetLoads())->GetVec())[0] = ForceX;
+  }
+  else if(config->GetStructType() == "SPRING_VER"){
+    ((solver->GetLoads())->GetVec())[0] = ForceY;
+  }
+  else if(config->GetStructType() == "AIRFOIL"){
+    ((solver->GetLoads())->GetVec())[0] = -ForceY;
+  }
+  else{
+    cerr << "Wrong structural type for applying global fluild loads !" << endl;
+    throw(-1);
+  }
+
+}
+
+void NativeSolidSolver::setGeneralisedMoment(double Moment){
+
+  if(config->GetStructType() == "AIRFOIL"){
+    ((solver->GetLoads())->GetVec())[1] = -Moment;
+  }
+  else if(config->GetStructType() == "SPRING_VER"){}
+  else if(config->GetStructType() == "SPRING_HOR"){}
+  else{
+    cerr << "Wrong structural type for applying global fluild loads !" << endl;
+    throw(-1);
+  }
+
 }

@@ -25,25 +25,16 @@ protected:
     std::ofstream restartFile;
     CVector* q_uM1; //The displacement at the previous FSI iteration
     double omega;
-    double* globalFluidLoads; //Used for communications with FluidSolver !!
-    double **solidInterface, **solidSurfaceLoads;
-    double* solidInterfaceBuffer;
     unsigned long nSolidInterfaceVertex;
     double varCoordNorm;
 
+
 public:
-    NativeSolidSolver(std::string str);
+    /* NEW generation */
+    NativeSolidSolver(std::string str, bool FSIComp);
     ~NativeSolidSolver();
-    void initialize(bool FSIComp);
     void exit();
-    void inputFluidLoads(double currentTime, double FSI_Load);
     double getVarCoordNorm() const;
-    double* getGlobalFluidLoadsArray() const;
-    double** getSolidInterface() const;
-    double** getSolidSurfaceLoads() const;
-    const double* getCenterCoordinate() const;
-    unsigned long getnSolidInterfaceVertex() const;
-    void applyGlobalFluidLoads();
     void timeIteration(double currentTime);
     void mapRigidBodyMotion(bool predicition, bool initialize);
     void setInitialDisplacements();
@@ -51,11 +42,16 @@ public:
     void writeSolution(double currentTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter);
     void updateSolution();
     void updateGeometry();
-    void outputDisplacements(double* interfRigidDispArray, bool initialize);
-    //void outputSolidInterface(double* buffer);
-    void displacementPredictor_Old(double* interfRigidDispArray);
     void displacementPredictor();
-    void setAitkenCoefficient(unsigned long FSIIter);
-    double aitkenRelaxation();
-
+    unsigned short getFSIMarkerID();
+    unsigned long getNumberOfSolidInterfaceNodes(unsigned short iMarker);
+    unsigned int getInterfaceNodeGlobalIndex(unsigned short iMarker, unsigned short iVertex);
+    double getInterfaceNodePosX(unsigned short iMarker, unsigned short iVertex);
+    double getInterfaceNodePosY(unsigned short iMarker, unsigned short iVertex);
+    double getInterfaceNodePosZ(unsigned short iMarker, unsigned short iVertex);
+    double getRotationCenterPosX();
+    double getRotationCenterPosY();
+    double getRotationCenterPosZ();
+    void setGeneralisedForce(double ForceX , double ForceY);
+    void setGeneralisedMoment(double Moment);
 };
