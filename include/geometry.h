@@ -6,18 +6,31 @@
 class Point{
 
 protected:
+  double* Coord0;
   double* Coord;
   double* Coord_n;
+  double* Vel;
+  double* Vel_n;
+  double* Force;
 
 public:
   Point();
   ~Point();
+  double* GetCoord0() const;
   double* GetCoord() const;
   double* GetCoord_n() const;
+  double* GetVel() const;
+  double* GetVel_n() const;
+  double* GetForce() const;
   void PrintCoord() const;
+  void SetCoord0(double* newCoord);
   void SetCoord(double* newCoord);
   void SetCoord_n(double* newCoord);
+  void SetVel(double* newVel);
+  void SetVel_n(double* newVel_n);
+  void SetForce(double* newForce);
   void UpdateCoord();
+  void UpdateVel();
 };
 
 /*class Vertex{

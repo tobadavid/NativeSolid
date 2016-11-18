@@ -11,8 +11,12 @@ using namespace std;
 
 Point::Point(){
 
-  Coord = new double[3];
+  Coord0 = new double[3];
+  Coord0[0] = 0.0;
+  Coord0[1] = 0.0;
+  Coord0[2] = 0.0;
 
+  Coord = new double[3];
   Coord[0] = 0.0;
   Coord[1]= 0.0;
   Coord[2] = 0.0;
@@ -22,14 +26,45 @@ Point::Point(){
   Coord_n[1] = 0.0;
   Coord_n[2] = 0.0;
 
+  Vel = new double[3];
+  Vel[0] = 0.0;
+  Vel[1] = 0.0;
+  Vel[2] = 0.0;
+
+  Vel_n = new double[3];
+  Vel_n[0] = 0.0;
+  Vel_n[1] = 0.0;
+  Vel_n[2] = 0.0;
+
+  Force = new double[3];
+  Force[0] = 0.0;
+  Force[1] = 0.0;
+  Force[2] = 0.0;
+
 }
 
 Point::~Point(){
+  delete [] Coord0;
+  Coord0 = NULL;
+
   delete [] Coord;
   Coord = NULL;
 
   delete [] Coord_n;
   Coord_n = NULL;
+
+  delete [] Vel;
+  Vel = NULL;
+
+  delete [] Vel_n;
+  Vel_n = NULL;
+
+  delete [] Force;
+  Force = NULL;
+}
+
+double* Point::GetCoord0() const{
+  return Coord0;
 }
 
 double* Point::GetCoord() const{
@@ -40,8 +75,26 @@ double* Point::GetCoord_n() const{
   return Coord_n;
 }
 
+double* Point::GetVel() const{
+    return Vel;
+}
+
+double* Point::GetVel_n() const{
+    return Vel_n;
+}
+
+double* Point::GetForce() const{
+    return Force;
+}
+
 void Point::PrintCoord() const{
   cout << Coord[0] << " ; " << Coord[1] << " ; " << Coord[2] << endl;
+}
+
+void Point::SetCoord0(double* newCoord){
+  Coord0[0] = newCoord[0];
+  Coord0[1] = newCoord[1];
+  Coord0[2] = newCoord[2];
 }
 
 void Point::SetCoord(double* newCoord){
@@ -56,10 +109,34 @@ void Point::SetCoord_n(double* newCoord){
   Coord_n[2] = newCoord[2];
 }
 
+void Point::SetVel(double *newVel){
+    Vel[0] = newVel[0];
+    Vel[1] = newVel[1];
+    Vel[2] = newVel[2];
+}
+
+void Point::SetVel_n(double *newVel_n){
+    Vel_n[0] = newVel_n[0];
+    Vel_n[1] = newVel_n[1];
+    Vel_n[2] = newVel_n[2];
+}
+
+void Point::SetForce(double* newForce){
+    Force[0] = newForce[0];
+    Force[1] = newForce[1];
+    Force[2] = newForce[2];
+}
+
 void Point::UpdateCoord(){
   Coord_n[0] = Coord[0];
   Coord_n[1] = Coord[1];
   Coord_n[2] = Coord[2];
+}
+
+void Point::UpdateVel(){
+    Vel_n[0] = Vel[0];
+    Vel_n[1] = Vel[1];
+    Vel_n[2] = Vel[2];
 }
 
 Geometry::Geometry(Config* config){
@@ -130,6 +207,7 @@ Geometry::Geometry(Config* config){
         point_line >> Coord[1];
         //if(iPoint == 1) cout << Coord[1] << endl;
         if(nDim == 3) point_line >> Coord[2];
+        node[iPoint]->SetCoord0(Coord);
         node[iPoint]->SetCoord(Coord);
         node[iPoint]->SetCoord_n(Coord);
         TempCoord = node[iPoint]->GetCoord();
@@ -236,6 +314,7 @@ void Geometry::UpdateGeometry(){
 
   for(iPoint=0; iPoint < nPoint; iPoint++){
     node[iPoint]->UpdateCoord();
+    node[iPoint]->UpdateVel();
   }
 }
 

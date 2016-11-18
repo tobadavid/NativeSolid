@@ -151,7 +151,8 @@ void NativeSolidSolver::timeIteration(double currentTime){
   }
   }
 
-  mapRigidBodyMotion(false, false);
+  //mapRigidBodyMotion(false, false);
+  computeInterfacePosVel(false);
 
 }
 
@@ -301,8 +302,128 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
   structure->SetCenterOfRotation_Z(newCenter[2]);
 }
 
+void NativeSolidSolver::computeInterfacePosVel(bool initialize){
+
+    double *Coord, *Coord_n, newCoord[3], newVel[3], Center[3], Center_n[3], newCenter[3], rotCoord[3], r[3];
+    double varCoord[3] = {0.0, 0.0, 0.0};
+    double rotMatrix[3][3] = {{0.0,0.0,0.0}, {0.0,0.0,0.0}, {0.0,0.0,0.0}};
+    double dTheta, dPhi, dPsi;
+    double psidot;
+    double cosTheta, sinTheta, cosPhi, sinPhi, cosPsi, sinPsi;
+    unsigned short iMarker, iVertex, nDim(3);
+    unsigned long iPoint;
+    double varCoordNorm2(0.0);
+
+    /*--- Get the current center of rotation (can vary at each iteration) ---*/
+    Center[0] = structure->GetCenterOfRotation_x();
+    Center[1] = structure->GetCenterOfRotation_y();
+    Center[2] = structure->GetCenterOfRotation_z();
+
+    /*--- Get the center of rotation from previous time step ---*/
+    Center_n[0] = structure->GetCenterOfRotation_n_x();
+    Center_n[1] = structure->GetCenterOfRotation_n_y();
+    Center_n[2] = structure->GetCenterOfRotation_n_z();
+
+    dTheta = 0.0;
+    dPhi = 0.0;
+    if (config->GetStructType() == "AIRFOIL"){
+      dPsi = -( (*(solver->GetDisp()))[1] - (*(solver->GetDisp_n()))[1]);
+      psidot = (*(solver->GetVel()))[1];
+      newCenter[0] = Center[0];
+      newCenter[1] = -(*(solver->GetDisp()))[0];
+      newCenter[2] = Center[2];
+    }
+    else if(config->GetStructType() == "SPRING_HOR"){
+      dPsi = 0.0;
+      newCenter[0] = (*(solver->GetDisp()))[0];
+      newCenter[1] = Center[1];
+      newCenter[2] = Center[2];
+    }
+
+    cosTheta = cos(dTheta);  cosPhi = cos(dPhi);  cosPsi = cos(dPsi);
+    sinTheta = sin(dTheta);  sinPhi = sin(dPhi);  sinPsi = sin(dPsi);
+
+    /*--- Compute the rotation matrix. The implicit
+    ordering is rotation about the x-axis, y-axis, then z-axis. ---*/
+
+    rotMatrix[0][0] = cosPhi*cosPsi;
+    rotMatrix[1][0] = cosPhi*sinPsi;
+    rotMatrix[2][0] = -sinPhi;
+
+    rotMatrix[0][1] = sinTheta*sinPhi*cosPsi - cosTheta*sinPsi;
+    rotMatrix[1][1] = sinTheta*sinPhi*sinPsi + cosTheta*cosPsi;
+    rotMatrix[2][1] = sinTheta*cosPhi;
+
+    rotMatrix[0][2] = cosTheta*sinPhi*cosPsi + sinTheta*sinPsi;
+    rotMatrix[1][2] = cosTheta*sinPhi*sinPsi - sinTheta*cosPsi;
+    rotMatrix[2][2] = cosTheta*cosPhi;
+
+
+    for(iMarker = 0; iMarker < geometry->GetnMarkers(); iMarker++){
+      if (geometry->markersMoving[iMarker] == true){
+        for(iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++){
+          iPoint = geometry->vertex[iMarker][iVertex];
+          Coord = geometry->node[iPoint]->GetCoord();
+          Coord_n = geometry->node[iPoint]->GetCoord_n();
+
+          if(config->GetUnsteady() == "YES"){
+            for (int iDim=0; iDim < nDim; iDim++){
+              r[iDim] = Coord_n[iDim] - Center_n[iDim];
+            }
+          }
+          else{
+            for (int iDim=0; iDim < nDim; iDim++){
+              r[iDim] = Coord[iDim] - Center[iDim];
+            }
+          }
+
+          rotCoord[0] = rotMatrix[0][0]*r[0]
+                + rotMatrix[0][1]*r[1]
+                + rotMatrix[0][2]*r[2];
+
+          rotCoord[1] = rotMatrix[1][0]*r[0]
+                + rotMatrix[1][1]*r[1]
+                + rotMatrix[1][2]*r[2];
+
+          rotCoord[2] = rotMatrix[2][0]*r[0]
+                + rotMatrix[2][1]*r[1]
+                + rotMatrix[2][2]*r[2];
+
+          for(int iDim=0; iDim < nDim; iDim++){
+                  newCoord[iDim] = newCenter[iDim] + rotCoord[iDim];
+                  varCoord[iDim] = newCoord[iDim] - Coord[iDim];
+          }
+          newVel[0] = psidot*(newCoord[1]-newCenter[1]);
+          newVel[1] = -psidot*(newCoord[0]-newCenter[0]);
+          newVel[2] = 0.0;
+
+          varCoordNorm2 += varCoord[0]*varCoord[0] + varCoord[1]*varCoord[1] + varCoord[2]*varCoord[2];
+
+          /*--- Apply change of coordinates to the node on the moving interface ---*/
+          geometry->node[iPoint]->SetCoord(newCoord);
+          geometry->node[iPoint]->SetVel(newVel);
+
+          /*--- At initialisation, propagate the initial position of the inteface in the past ---*/
+          if(initialize){
+              geometry->node[iPoint]->SetCoord_n(newCoord);
+              geometry->node[iPoint]->SetVel_n(newVel);
+          }
+        }
+      }
+    }
+
+    varCoordNorm = sqrt(varCoordNorm2);
+
+    /*--- Update the position of the center of rotation ---*/
+    structure->SetCenterOfRotation_X(newCenter[0]);
+    structure->SetCenterOfRotation_Y(newCenter[1]);
+    structure->SetCenterOfRotation_Z(newCenter[2]);
+
+}
+
 void NativeSolidSolver::setInitialDisplacements(){
-  mapRigidBodyMotion(false, true);
+  //mapRigidBodyMotion(false, true);
+  computeInterfacePosVel(true);
 }
 
 void NativeSolidSolver::staticComputation(){
@@ -394,6 +515,10 @@ void NativeSolidSolver::updateSolution(){
 
   if(config->GetUnsteady() == "YES"){
     solver->UpdateSolution();
+    geometry->UpdateGeometry();
+    structure->SetCenterOfRotation_n_X(structure->GetCenterOfRotation_x());
+    structure->SetCenterOfRotation_n_Y(structure->GetCenterOfRotation_y());
+    structure->SetCenterOfRotation_n_Z(structure->GetCenterOfRotation_z());
   }
   else
     *q_uM1 = (*(solver->GetDisp()));
@@ -476,6 +601,101 @@ double NativeSolidSolver::getInterfaceNodePosZ(unsigned short iMarker, unsigned 
     return 0.0; //3D is not really implemented in this solver...
 }
 
+double NativeSolidSolver::getInterfaceNodeDispX(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord, *Coord0;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord();
+    Coord0 = geometry->node[iPoint]->GetCoord0();
+
+    return Coord[0] - Coord0[0];
+}
+
+double NativeSolidSolver::getInterfaceNodeDispY(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord, *Coord0;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord();
+    Coord0 = geometry->node[iPoint]->GetCoord0();
+    return Coord[1] - Coord0[1];
+}
+
+double NativeSolidSolver::getInterfaceNodeDispZ(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord, *Coord0;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord();
+    Coord0 = geometry->node[iPoint]->GetCoord0();
+
+    return Coord[2] - Coord0[2];
+}
+
+double NativeSolidSolver::getInterfaceNodeVelX(unsigned short iMarker, unsigned short iVertex){
+    unsigned long iPoint;
+    double *Vel;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Vel = geometry->node[iPoint]->GetVel();
+
+    return Vel[0];
+}
+
+double NativeSolidSolver::getInterfaceNodeVelY(unsigned short iMarker, unsigned short iVertex){
+    unsigned long iPoint;
+    double *Vel;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Vel = geometry->node[iPoint]->GetVel();
+
+    return Vel[1];
+}
+
+double NativeSolidSolver::getInterfaceNodeVelZ(unsigned short iMarker, unsigned short iVertex){
+    unsigned long iPoint;
+    double *Vel;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Vel = geometry->node[iPoint]->GetVel();
+
+    return Vel[2];
+}
+
+double NativeSolidSolver::getInterfaceNodeVelXNm1(unsigned short iMarker, unsigned short iVertex){
+    unsigned long iPoint;
+    double *Vel_n;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Vel_n = geometry->node[iPoint]->GetVel_n();
+
+    return Vel_n[0];
+}
+
+double NativeSolidSolver::getInterfaceNodeVelYNm1(unsigned short iMarker, unsigned short iVertex){
+    unsigned long iPoint;
+    double *Vel_n;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Vel_n = geometry->node[iPoint]->GetVel_n();
+
+    return Vel_n[1];
+}
+
+double NativeSolidSolver::getInterfaceNodeVelZNm1(unsigned short iMarker, unsigned short iVertex){
+    unsigned long iPoint;
+    double *Vel_n;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Vel_n = geometry->node[iPoint]->GetVel_n();
+
+    return Vel_n[2];
+}
+
 double NativeSolidSolver::getRotationCenterPosX(){
 
     return structure->GetCenterOfRotation_x();
@@ -492,7 +712,22 @@ double NativeSolidSolver::getRotationCenterPosZ(){
     return structure->GetCenterOfRotation_z();
 }
 
-void NativeSolidSolver::setGeneralisedForce(double ForceX, double ForceY){
+void NativeSolidSolver::setGeneralisedForce(){
+
+  unsigned short iVertex, iMarker;
+  unsigned long iPoint;
+  double ForceX(0.0), ForceY(0.0), ForceZ(0.0);
+  double* force;
+
+  iMarker = getFSIMarkerID();
+
+  for(iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++){
+      iPoint = geometry->vertex[iMarker][iVertex];
+      force = geometry->node[iPoint]->GetForce();
+      ForceX += force[0];
+      ForceY += force[1];
+      ForceZ += force[2];
+  }
 
   if(config->GetStructType() == "SPRING_HOR"){
     ((solver->GetLoads())->GetVec())[0] = ForceX;
@@ -510,7 +745,24 @@ void NativeSolidSolver::setGeneralisedForce(double ForceX, double ForceY){
 
 }
 
-void NativeSolidSolver::setGeneralisedMoment(double Moment){
+void NativeSolidSolver::setGeneralisedMoment(){
+
+  unsigned short iVertex, iMarker;
+  unsigned long iPoint;
+  double Moment(0.0), CenterX, CenterY, CenterZ;
+  double* Force;
+  double* Coord;
+
+  iMarker = getFSIMarkerID();
+
+  for(iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++){
+      iPoint = geometry->vertex[iMarker][iVertex];
+      Force = geometry->node[iPoint]->GetForce();
+      Coord = geometry->node[iPoint]->GetCoord();
+      CenterX = getRotationCenterPosX();
+      CenterY = getRotationCenterPosY();
+      Moment += (Force[1]*(Coord[0]-CenterX) - Force[0]*(Coord[1]-CenterY));
+  }
 
   if(config->GetStructType() == "AIRFOIL"){
     ((solver->GetLoads())->GetVec())[1] = -Moment;
@@ -521,5 +773,21 @@ void NativeSolidSolver::setGeneralisedMoment(double Moment){
     cerr << "Wrong structural type for applying global fluild loads !" << endl;
     throw(-1);
   }
+
+}
+
+void NativeSolidSolver::applyload(unsigned short iVertex, double Fx, double Fy, double Fz, double time){
+
+    unsigned short iMarker;
+    unsigned long iPoint;
+    double Force[3];
+
+    Force[0] = Fx;
+    Force[1] = Fy;
+    Force[2] = Fz;
+
+    iMarker = getFSIMarkerID();
+    iPoint = geometry->vertex[iMarker][iVertex];
+    geometry->node[iPoint]->SetForce(Force);
 
 }
