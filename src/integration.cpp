@@ -366,7 +366,6 @@ void Integration::TemporalIteration(Config *config, Structure *structure){
     Deltaq->Reset();
     ComputeResidual(structure->GetM(),structure->GetC(),structure->GetK(),res);
   }
-  //cout << (*q)[0] << endl;
   *a += ScalVecProd((1-alpha_f)/(1-alpha_m),qddot);
 
   delete res;
