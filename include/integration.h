@@ -12,6 +12,7 @@ class Integration{
 protected:
     double totTime;
     double deltaT;
+    unsigned long ExtIter;
     double beta;
     double gamma;
     double alpha_m;
@@ -37,6 +38,8 @@ public:
     double GetdeltaT();
     CVector* GetDisp() const;
     void SetDisp(double & val_disp);
+    void SetExtIter(unsigned long val_ExtIter);
+    unsigned long GetExtIter();
     //void SetLoads()
     CVector* GetVel() const;
     CVector* GetAcc() const;

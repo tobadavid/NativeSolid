@@ -51,6 +51,16 @@ void Integration::SetDisp(double & val_disp){
   (*q)[0] = val_disp;
 }
 
+void Integration::SetExtIter(unsigned long val_ExtIter){
+
+    ExtIter = val_ExtIter;
+}
+
+unsigned long Integration::GetExtIter(){
+
+    return ExtIter;
+}
+
 CVector* Integration::GetVel() const{
   return qdot;
 }
@@ -87,6 +97,7 @@ void Integration::SetIntegrationParam(Config* config){
 
   totTime = config->GetStopTime();
   deltaT = config->GetDeltaT();
+  ExtIter = 0;
   algo = config->GetIntegrationAlgo();
 
   if(algo == "NEWMARK"){
@@ -286,6 +297,7 @@ void Integration::SetInitialConditions(Config* config, Structure* structure){
   else{
     cout << "Setting basic initial conditions" << endl;
     SetLoadsAtTime(config, structure, 0.0, 0.0);
+    ExtIter = 0;
     q->Reset();
     q_n->Reset();
     cout << "Read initial configuration" << endl;
