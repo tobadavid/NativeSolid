@@ -122,11 +122,16 @@ void NativeSolidSolver::exit(){
 
 }
 
-double NativeSolidSolver::getVarCoordNorm() const{
+void NativeSolidSolver::preprocessIteration(unsigned long ExtIter){
+
+    solver->SetExtIter(ExtIter);
+}
+
+/*double NativeSolidSolver::getVarCoordNorm() const{
 
   return varCoordNorm;
 
-}
+}*/
 
 void NativeSolidSolver::timeIteration(double currentTime){
 
@@ -448,7 +453,8 @@ void NativeSolidSolver::staticComputation(){
     }
   }
 
-  mapRigidBodyMotion(false,false);
+  //mapRigidBodyMotion(false,false);
+  computeInterfacePosVel(false);
 
 }
 
@@ -511,6 +517,42 @@ void NativeSolidSolver::writeSolution(double currentTime, double currentFSIIter,
 
 }
 
+void NativeSolidSolver::saveSolution(){
+
+    int rank = MASTER_NODE;
+    int size = 1;
+    double DeltaT;
+    //string restartFileName;
+    //unsigned long DeltaIter = config->GetDeltaIterWrite();
+    unsigned long ExtIter = solver->GetExtIter();
+
+    DeltaT = config->GetDeltaT();
+
+  #ifdef HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+  #endif
+
+    if(rank == MASTER_NODE){
+    if(structure->GetnDof() == 1){
+      if(config->GetUnsteady() == "YES"){
+        historyFile << ExtIter << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAccVar()))[0] << endl;
+      }
+      else{
+        historyFile << ExtIter << "\t" << (*(solver->GetDisp()))[0] << endl;
+      }
+    }
+    else if(structure->GetnDof() == 2){
+      if(config->GetUnsteady() == "YES"){
+        historyFile << ExtIter << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetVel()))[1] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAcc()))[1] << "\t" << (*(solver->GetAccVar()))[0] << "\t" << (*(solver->GetAccVar()))[1] << endl;
+      }
+      else{
+        historyFile << ExtIter << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << endl;
+      }
+    }
+    }
+}
+
 void NativeSolidSolver::updateSolution(){
 
   if(config->GetUnsteady() == "YES"){
@@ -524,7 +566,7 @@ void NativeSolidSolver::updateSolution(){
     *q_uM1 = (*(solver->GetDisp()));
 }
 
-void NativeSolidSolver::updateGeometry(){
+/*void NativeSolidSolver::updateGeometry(){
 
   if(config->GetUnsteady() == "YES"){
     geometry->UpdateGeometry();
@@ -532,13 +574,13 @@ void NativeSolidSolver::updateGeometry(){
     structure->SetCenterOfRotation_n_Y(structure->GetCenterOfRotation_y());
     structure->SetCenterOfRotation_n_Z(structure->GetCenterOfRotation_z());
   }
-}
+}*/
 
-void NativeSolidSolver::displacementPredictor(){
+/*void NativeSolidSolver::displacementPredictor(){
 
   mapRigidBodyMotion(true, false);
 
-}
+}*/
 
 unsigned short NativeSolidSolver::getFSIMarkerID(){
 
@@ -599,6 +641,39 @@ double NativeSolidSolver::getInterfaceNodePosZ(unsigned short iMarker, unsigned 
     Coord = geometry->node[iPoint]->GetCoord();
 
     return 0.0; //3D is not really implemented in this solver...
+}
+
+double NativeSolidSolver::getInterfaceNodePosX0(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord0();
+
+    return Coord[0];
+}
+
+double NativeSolidSolver::getInterfaceNodePosY0(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord0();
+
+    return Coord[1];
+}
+
+double NativeSolidSolver::getInterfaceNodePosZ0(unsigned short iMarker, unsigned short iVertex){
+
+    unsigned long iPoint;
+    double *Coord;
+
+    iPoint = geometry->vertex[iMarker][iVertex];
+    Coord = geometry->node[iPoint]->GetCoord0();
+
+    return 0.0;
 }
 
 double NativeSolidSolver::getInterfaceNodeDispX(unsigned short iMarker, unsigned short iVertex){
@@ -776,7 +851,7 @@ void NativeSolidSolver::setGeneralisedMoment(){
 
 }
 
-void NativeSolidSolver::applyload(unsigned short iVertex, double Fx, double Fy, double Fz, double time){
+void NativeSolidSolver::applyload(unsigned short iVertex, double Fx, double Fy, double Fz){
 
     unsigned short iMarker;
     unsigned long iPoint;
