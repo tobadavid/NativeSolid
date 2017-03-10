@@ -397,11 +397,11 @@ void Integration::StaticIteration(Config *config, Structure *structure){
 void Integration::UpdateSolution(){
 
   *q_n = *q;
-  q->Reset();
+  //q->Reset();
   *qdot_n = *qdot;
-  qdot->Reset();
+  //qdot->Reset();
   *qddot_n = *qddot;
-  qddot->Reset();
+  //qddot->Reset();
   *a_n = *a;
-  a->Reset();
+  //a->Reset();
 }
