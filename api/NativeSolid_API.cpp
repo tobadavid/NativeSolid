@@ -309,7 +309,7 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
 
 void NativeSolidSolver::computeInterfacePosVel(bool initialize){
 
-    double *Coord, *Coord_n, newCoord[3], newVel[3], Center[3], Center_n[3], newCenter[3], rotCoord[3], r[3];
+    double *Coord, *Coord_n, newCoord[3], newVel[3], Center[3], Center_n[3], newCenter[3], centerVel[3], rotCoord[3], r[3];
     double varCoord[3] = {0.0, 0.0, 0.0};
     double rotMatrix[3][3] = {{0.0,0.0,0.0}, {0.0,0.0,0.0}, {0.0,0.0,0.0}};
     double dTheta, dPhi, dPsi;
@@ -337,6 +337,9 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize){
       newCenter[0] = Center[0];
       newCenter[1] = -(*(solver->GetDisp()))[0];
       newCenter[2] = Center[2];
+      centerVel[0] = 0.0;
+      centerVel[1] = -(*(solver->GetVel()))[0];
+      centerVel[2] = 0.0;
     }
     else if(config->GetStructType() == "SPRING_HOR"){
       dPsi = 0.0;
@@ -367,6 +370,7 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize){
     for(iMarker = 0; iMarker < geometry->GetnMarkers(); iMarker++){
       if (geometry->markersMoving[iMarker] == true){
         for(iVertex = 0; iVertex < geometry->nVertex[iMarker]; iVertex++){
+
           iPoint = geometry->vertex[iMarker][iVertex];
           Coord = geometry->node[iPoint]->GetCoord();
           Coord_n = geometry->node[iPoint]->GetCoord_n();
@@ -398,9 +402,10 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize){
                   newCoord[iDim] = newCenter[iDim] + rotCoord[iDim];
                   varCoord[iDim] = newCoord[iDim] - Coord[iDim];
           }
-          newVel[0] = psidot*(newCoord[1]-newCenter[1]);
-          newVel[1] = -psidot*(newCoord[0]-newCenter[0]);
-          newVel[2] = 0.0;
+
+          newVel[0] = centerVel[0] + psidot*(newCoord[1]-newCenter[1]);
+          newVel[1] = centerVel[1] - psidot*(newCoord[0]-newCenter[0]);
+          newVel[2] = centerVel[2] + 0.0;
 
           varCoordNorm2 += varCoord[0]*varCoord[0] + varCoord[1]*varCoord[1] + varCoord[2]*varCoord[2];
 
