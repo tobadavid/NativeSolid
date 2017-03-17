@@ -24,6 +24,13 @@ int rank = MASTER_NODE;
     else cout << endl <<"***************************** Setting NativeSolid for CSD simulation *****************************" << endl;
   }
 
+    config = NULL;
+    output = NULL;
+    geometry = NULL;
+    structure = NULL;
+    solver = NULL;
+    q_uM1 = NULL;
+
     /*--- Initialize the main containers ---*/
     config = new Config(confFile);
     output = new Output();
@@ -113,12 +120,12 @@ void NativeSolidSolver::exit(){
     cout << endl << "***************************** Exit NativeSolid *****************************" << endl;
   }
 
-  delete config;
-  delete geometry;
-  delete structure;
-  delete solver;
-  delete output;
-  delete q_uM1;
+  if (config != NULL) delete config;
+  if (geometry != NULL) delete geometry;
+  if (structure != NULL) delete structure;
+  if (solver != NULL) delete solver;
+  if (output != NULL) delete output;
+  if (q_uM1 != NULL) delete q_uM1;
 
 }
 
@@ -126,12 +133,6 @@ void NativeSolidSolver::preprocessIteration(unsigned long ExtIter){
 
     solver->SetExtIter(ExtIter);
 }
-
-/*double NativeSolidSolver::getVarCoordNorm() const{
-
-  return varCoordNorm;
-
-}*/
 
 void NativeSolidSolver::timeIteration(double currentTime){
 
@@ -825,6 +826,23 @@ void NativeSolidSolver::setGeneralisedForce(){
 
 }
 
+void NativeSolidSolver::setGeneralisedForce(double Fx, double Fy){
+
+  if(config->GetStructType() == "SPRING_HOR"){
+    ((solver->GetLoads())->GetVec())[0] = Fx;
+  }
+  else if(config->GetStructType() == "SPRING_VER"){
+    ((solver->GetLoads())->GetVec())[0] = Fy;
+  }
+  else if(config->GetStructType() == "AIRFOIL"){
+    ((solver->GetLoads())->GetVec())[0] = -Fy;
+  }
+  else{
+    cerr << "Wrong structural type for applying global fluild loads !" << endl;
+    throw(-1);
+  }
+}
+
 void NativeSolidSolver::setGeneralisedMoment(){
 
   unsigned short iVertex, iMarker;
@@ -854,6 +872,19 @@ void NativeSolidSolver::setGeneralisedMoment(){
     throw(-1);
   }
 
+}
+
+void NativeSolidSolver::setGeneralisedMoment(double M){
+
+  if(config->GetStructType() == "AIRFOIL"){
+    ((solver->GetLoads())->GetVec())[1] = -M;
+  }
+  else if(config->GetStructType() == "SPRING_VER"){}
+  else if(config->GetStructType() == "SPRING_HOR"){}
+  else{
+    cerr << "Wrong structural type for applying global fluild loads !" << endl;
+    throw(-1);
+  }
 }
 
 void NativeSolidSolver::applyload(unsigned short iVertex, double Fx, double Fy, double Fz){

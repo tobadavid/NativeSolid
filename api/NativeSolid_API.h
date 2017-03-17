@@ -68,6 +68,8 @@ public:
     double getRotationCenterPosY();
     double getRotationCenterPosZ();
     void setGeneralisedForce();
+    void setGeneralisedForce(double Fx, double Fy);
     void setGeneralisedMoment();
+    void setGeneralisedMoment(double M);
     void applyload(unsigned short iVertex, double Fx, double Fy, double Fz);
 };
