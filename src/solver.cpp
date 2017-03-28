@@ -1,0 +1,510 @@
+#include "../include/solver.h"
+#include "../include/structure.h"
+#include "../include/MatVec.h"
+
+#include <iostream>
+#include <fstream>
+
+using namespace std;
+
+/* CLASS SOLVER*/
+Solver::Solver(unsigned int nDof){
+
+  q.Initialize(nDof, 0.0);
+  qdot.Initialize(nDof, 0.0);
+  qddot.Initialize(nDof, 0.0);
+  q_n.Initialize(nDof, 0.0);
+  qdot_n.Initialize(nDof, 0.0);
+  qddot_n.Initialize(nDof, 0.0);
+  Loads.Initialize(nDof, 0.0);
+  Loads_n.Initialize(nDof, 0.0);
+
+  ResetSolution();
+  Loads.Reset();
+  Loads_n.Reset();
+
+}
+
+Solver::~Solver(){}
+
+void Solver::Iterate(double &t0, double &tf, Structure* structure){}
+
+CVector & Solver::GetDisp(){
+  return q;
+}
+
+CVector & Solver::GetVel(){
+  return qdot;
+}
+
+CVector & Solver::GetAcc(){
+  return qddot;
+}
+
+CVector & Solver::GetDisp_n(){
+  return q_n;
+}
+
+CVector & Solver::GetVel_n(){
+  return qdot_n;
+}
+
+CVector & Solver::GetAcc_n(){
+  return qddot_n;
+}
+
+CVector & Solver::GetLoads(){
+  return Loads;
+}
+
+CVector & Solver::GetAccVar(){
+  return a;
+}
+
+CVector & Solver::GetAccVar_n(){
+  return a_n;
+}
+
+void Solver::ResetSolution(){
+  q.Reset();
+  qdot.Reset();
+  qddot.Reset();
+  q_n.Reset();
+  qdot_n.Reset();
+  qddot_n.Reset();
+}
+
+void Solver::SaveToThePast(){
+  q_n = q;
+  qdot_n = qdot;
+  qddot_n = qddot;
+  Loads_n = Loads;
+}
+
+void Solver::SetInitialState(Config *config, Structure* structure){}
+
+/*CLASS ALPHAGENSOLVER*/
+AlphaGenSolver::AlphaGenSolver(unsigned int nDof, double val_rho) : Solver(nDof) {
+
+  a.Initialize(nDof, 0.0);
+  a_n.Initialize(nDof, 0.0);
+
+  rho = val_rho;
+  alpha_m = (2*rho-1)/(rho+1);
+  alpha_f = rho/(rho+1);
+  gamma = 0.5+alpha_f-alpha_m;
+  beta = 0.25*pow((gamma+0.5),2);
+  cout << "Integration with the alpha-generalized algorithm :" << endl;
+  cout << "rho : " << rho << endl;
+  cout << "alpha_m : " << alpha_m << endl;
+  cout << "alpha_f : " << alpha_f << endl;
+  cout << "gamma : " << gamma << endl;
+  cout << "beta : " << beta << endl;
+}
+
+AlphaGenSolver::~AlphaGenSolver() {}
+
+CVector & AlphaGenSolver::GetAccVar(){
+  return a;
+}
+
+CVector & AlphaGenSolver::GetAccVar_n(){
+  return a_n;
+}
+
+void AlphaGenSolver::Iterate(double &t0, double &tf, Structure *structure){
+
+  double deltaT(tf-t0), epsilon(1e-6);
+
+  gammaPrime = gamma/(deltaT*beta);
+  betaPrime = (1-alpha_m)/(pow(deltaT,2)*beta*(1-alpha_f));
+
+  /*--- Prediction phase ---*/
+  qddot.Reset();
+  a.Reset();
+
+  a += ScalVecProd(alpha_f/(1-alpha_m),qddot_n);
+  a -= ScalVecProd(alpha_m/(1-alpha_m),a_n);
+
+  q = q_n;
+  q += ScalVecProd(deltaT,qdot_n);
+  q += ScalVecProd((0.5-beta)*deltaT*deltaT,a_n);
+  q += ScalVecProd(deltaT*deltaT*beta,a);
+
+  qdot = qdot_n;
+  qdot += ScalVecProd((1-gamma)*deltaT,a_n);
+  qdot += ScalVecProd(deltaT*gamma,a);
+
+  /*--- Tangent operator and corrector computation ---*/
+  CVector res(qddot.GetSize(), 0.0);
+  CVector Deltaq(qddot.GetSize(), 0.0);
+  CMatrix St(qddot.GetSize(), qddot.GetSize(), 0.0);
+  //res = new CVector(qddot->GetSize(),double(0));
+  //Deltaq = new CVector(qddot->GetSize(),double(0));
+  //St = new CMatrix(qddot->GetSize(),qddot->GetSize(),double(0));
+  ComputeResidual(structure->GetM(),structure->GetC(),structure->GetK(),res);
+  while (res.norm() >= epsilon){
+    St.Reset();
+    ComputeTangentOperator(structure,St);
+    SolveSys(St,res);
+    //*res -= ScalVecProd(double(2),res); //=deltaq
+    Deltaq += ScalVecProd(-1,res);
+    q += Deltaq;
+    qdot += ScalVecProd(gammaPrime,Deltaq);
+    qddot += ScalVecProd(betaPrime,Deltaq);
+    res.Reset();
+    Deltaq.Reset();
+    ComputeResidual(structure->GetM(),structure->GetC(),structure->GetK(),res);
+  }
+  a += ScalVecProd((1-alpha_f)/(1-alpha_m),qddot);
+
+  //delete res;
+  //delete Deltaq;
+  //delete St;
+  //Deltaq = NULL;
+  //res = NULL;
+  //St = NULL;
+}
+
+void AlphaGenSolver::ComputeResidual(const CMatrix & M, const CMatrix & C, const CMatrix & K, CVector & res){
+  res += MatVecProd(M,qddot);
+  res += MatVecProd(C,qdot);
+  res += MatVecProd(K,q);
+  res -= Loads;
+}
+
+void AlphaGenSolver::ComputeTangentOperator(Structure* structure, CMatrix &St){
+  St += ScalMatProd(betaPrime,structure->GetM());
+  St += ScalMatProd(gammaPrime,structure->GetC());
+  St += structure->GetK();
+}
+
+void AlphaGenSolver::ResetSolution(){
+
+  Solver::ResetSolution();
+  a.Reset();
+  a_n.Reset();
+}
+
+void AlphaGenSolver::SaveToThePast(){
+
+  Solver::SaveToThePast();
+  a_n = a;
+
+}
+
+void AlphaGenSolver::SetInitialState(Config* config, Structure* structure){
+
+  CVector RHS(structure->GetnDof(),double(0));
+
+  if(config->GetRestartSol() == "YES"){
+    string InputFileName = config->GetRestartFile();
+    string text_line;
+    string token, tempString;
+    size_t pos;
+    string delimiter = "\t";
+    ifstream InputFile;
+    InputFile.open(InputFileName.c_str(), ios::in);
+    double buffer[(4*structure->GetnDof())+1];
+    int kk = 0;
+    int jj;
+    while (getline(InputFile,text_line)){
+      tempString = text_line;
+      jj = 0;
+      if (kk == 1){
+        while ((pos = tempString.find(delimiter)) != string::npos){
+          token = tempString.substr(0,pos);
+          tempString.erase(0,pos+delimiter.length());
+          buffer[jj] = atof(token.c_str());
+          jj += 1;
+        }
+        buffer[jj] = atof(tempString.c_str());
+
+        if(structure->GetnDof() == 1){
+          q_n[0] = buffer[1];
+          qdot_n[0] = buffer[2];
+          qddot_n[0] = buffer[3];
+          a_n[0] = buffer[4];
+        }
+        else if (structure->GetnDof() == 2){
+          q_n[0] = buffer[1];
+          q_n[1] = buffer[2];
+          qdot_n[0] = buffer[3];
+          qdot_n[1] = buffer[4];
+          qddot_n[0] = buffer[5];
+          qddot_n[1] = buffer[6];
+          a_n[0] = buffer[7];
+          a_n[1] = buffer[8];
+        }
+        q_n.print();
+        qdot_n.print();
+        qddot_n.print();
+        a_n.print();
+      }
+      else if (kk == 2){
+        while ((pos = tempString.find(delimiter)) != string::npos){
+          token = tempString.substr(0,pos);
+          tempString.erase(0,pos+delimiter.length());
+          buffer[jj] = atof(token.c_str());
+          jj += 1;
+        }
+        buffer[jj] = atof(tempString.c_str());
+
+        if(structure->GetnDof() == 1){
+          q[0] = buffer[1];
+          qdot[0] = buffer[2];
+          qddot[0] = buffer[3];
+          a[0] = buffer[4];
+        }
+        else if (structure->GetnDof() == 2){
+          q[0] = buffer[1];
+          q[1] = buffer[2];
+          qdot[0] = buffer[3];
+          qdot[1] = buffer[4];
+          qddot[0] = buffer[5];
+          qddot[1] = buffer[6];
+          a[0] = buffer[7];
+          a[1] = buffer[8];
+        }
+        q.print();
+        qdot.print();
+        qddot.print();
+        a.print();
+      }
+      kk += 1;
+    }
+    InputFile.close();
+  }
+  else{
+    cout << "Setting basic initial conditions for alpha-Gen" << endl;
+    q.Reset();
+    q_n.Reset();
+    cout << "Read initial configuration" << endl;
+    q[0] = config->GetInitialDisp();
+    if(structure->GetnDof() == 2) q[1] = config->GetInitialAngle();
+    cout << "Initial plunging displacement : " << q[0] << endl;
+    cout << "Initial pitching displacement : " << q[1] << endl;
+    qdot.Reset();
+
+    qddot.Reset();
+    RHS += Loads;
+    RHS -= MatVecProd(structure->GetC(),qdot);
+    RHS -= MatVecProd(structure->GetK(),q);
+    SolveSys(structure->GetM(),RHS);
+    qddot = RHS;
+    a = qddot;
+  }
+}
+
+/*CLASS RK4 SOLVER*/
+RK4Solver::RK4Solver(unsigned nDof) : Solver(nDof){
+  size = nDof;
+  lastTime = 0.0;
+  currentTime = 0.0;
+}
+
+RK4Solver::~RK4Solver(){}
+
+void RK4Solver::Iterate(double& t0, double& tf, Structure *structure){
+
+  //cout << "ITERATE !!" << endl;
+
+  double h = tf-t0;
+  lastTime = t0;
+  currentTime = tf;
+
+  CVector k1(2*size);
+  CVector k2(2*size);
+  CVector k3(2*size);
+  CVector k4(2*size);
+
+  CVector state0(2*size);
+  CVector statef(2*size);
+  CVector statef_dot(2*size);
+  state0 = SetState_n();
+
+  CVector TEMP(2*size);
+
+  EvaluateStateDerivative(lastTime, state0, k1, structure);
+  //cout << "OKKKKK" << endl;
+  TEMP = state0+(k1*(h/2.0));
+  EvaluateStateDerivative(lastTime+h/2.0, TEMP, k2, structure);
+  //cout << "OKKKKK" << endl;
+  TEMP = state0+(k2*(h/2.0));
+  EvaluateStateDerivative(lastTime+h/2.0, TEMP, k3, structure);
+  //cout << "OKKKKK" << endl;
+  TEMP = state0+(k3*h);
+  EvaluateStateDerivative(lastTime+h, TEMP, k4, structure);
+
+  //cout << "Ready" << endl;
+  //cout << k1.GetSize() << endl;
+  //cout << k2.GetSize() << endl;
+  //cout << k3.GetSize() << endl;
+  //cout << k4.GetSize() << endl;
+  //cout << state0.GetSize() << endl;
+  statef = state0 + ((k1 + k2*2.0 + k3*2.0 + k4)*(h/6.0));
+
+  cout << "Last evaluate" << endl;
+  EvaluateStateDerivative(lastTime+h, statef, statef_dot, structure);
+
+  if(structure->GetnDof() == 1){
+    q[0] = statef[0];
+    qdot[0] = statef[1];
+    qddot[0] = statef_dot[1];
+  }
+  else if (structure->GetnDof() == 2){
+    q[0] = statef[0];
+    q[1] = statef[1];
+    qdot[0] = statef[2];
+    qdot[1] = statef[3];
+    qddot[0] = statef_dot[2];
+    qddot[1] = statef_dot[3];
+  }
+  else{
+
+  }
+}
+
+void RK4Solver::EvaluateStateDerivative(double tCurrent, CVector &state, CVector &stateDerivative, Structure* structure){
+
+  CVector stateLoads(size, 0.0);
+  interpLoads(tCurrent, stateLoads);
+
+  CVector RHS(size, 0.0);
+
+  //cout << "EVALUATE" << endl;
+
+  CVector q_current(size, 0.0);
+  CVector qdot_current(size, 0.0);
+  CVector qddot_current(size, 0.0);
+  if(structure->GetnDof() == 1){
+    q_current[0] = state[0];
+    qdot_current[0] = state[1];
+    stateDerivative[0] = state[1];
+  }
+  else if (structure->GetnDof() == 2){
+    q_current[0] = state[0];
+    q_current[1] = state[1];
+    qdot_current[0] = state[2];
+    qdot_current[1] = state[3];
+    stateDerivative[0] = state[2];
+    stateDerivative[1] = state[3];
+  }
+  else{
+
+  }
+
+  RHS += stateLoads;
+  RHS -= MatVecProd(structure->GetC(), qdot_current);
+  RHS -= MatVecProd(structure->GetK(), q_current);
+
+  SolveSys(structure->GetM(),RHS);
+  qddot_current = RHS;
+
+  if(structure->GetnDof() == 1){
+    stateDerivative[1] = qddot_current[0];
+  }
+  else if (structure->GetnDof() == 2){
+    stateDerivative[2] = qddot_current[0];
+    stateDerivative[3] = qddot_current[1];
+  }
+  else{
+
+  }
+
+}
+
+void RK4Solver::interpLoads(double &tCurrent, CVector &val_loads){
+
+  if (lastTime != currentTime){
+    val_loads[0] = (Loads[0] - Loads_n[0])/(currentTime-lastTime)*(tCurrent - lastTime) + Loads_n[0];
+    if(size == 2) val_loads[1] = (Loads[1] - Loads_n[1])/(currentTime-lastTime)*(tCurrent - lastTime) + Loads_n[1];
+  }
+  else{
+    val_loads[0] = Loads[0];
+    if(size == 2) val_loads[1] = Loads[1];
+  }
+}
+
+void RK4Solver::SetInitialState(Config *config, Structure *structure){
+
+  if (config->GetRestartSol() == "YES"){
+
+  }
+  else{
+    cout << "Setting basic initial conditions for RK4" << endl;
+    q.Reset();
+    q_n.Reset();
+    cout << "Read initial configuration" << endl;
+    q[0] = config->GetInitialDisp();
+    if(structure->GetnDof() == 2) q[1] = config->GetInitialAngle();
+    cout << "Initial plunging displacement : " << q[0] << endl;
+    cout << "Initial pitching displacement : " << q[1] << endl;
+    qdot.Reset();
+
+    lastTime = 0.0;
+    currentTime = 0.0;
+
+    qddot.Reset();
+    CVector state(2*size);
+    CVector state_dot(2*size);
+
+    state = SetState();
+    EvaluateStateDerivative(0.0, state, state_dot, structure);
+
+    if(structure->GetnDof() == 1){
+      qddot[0] = state_dot[1];
+    }
+    else if (structure->GetnDof() == 2){
+      qddot[0] = state_dot[2];
+      qddot[1] = state_dot[3];
+    }
+    else{
+
+    }
+
+  }
+}
+
+CVector RK4Solver::SetState(){
+
+  CVector state(2*size);
+
+  if(size == 1){
+    state[0] = q[0];
+    state[1] = qdot[0];
+  }
+  else if (size == 2){
+    state[0] = q[0];
+    state[1] = q[1];
+    state[2] = qdot[0];
+    state[3] = qdot[1];
+  }
+  else{
+
+  }
+
+  return state;
+
+}
+
+CVector RK4Solver::SetState_n(){
+
+  CVector state(2*size);
+
+  if(size == 1){
+    state[0] = q_n[0];
+    state[1] = qdot_n[0];
+  }
+  else if (size == 2){
+    state[0] = q_n[0];
+    state[1] = q_n[1];
+    state[2] = qdot_n[0];
+    state[3] = qdot_n[1];
+  }
+  else{
+
+  }
+
+  return state;
+}
