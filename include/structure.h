@@ -20,9 +20,9 @@ protected:
     double S;
     double ICG;
     double If;
-    CMatrix* M;
-    CMatrix* C;
-    CMatrix* K;
+    CMatrix M;
+    CMatrix C;
+    CMatrix K;
     double centerOfRotation[3];
     double centerOfRotation_n[3];
     //double* interfaceCoord;
@@ -35,9 +35,9 @@ public:
     //void readMeshSU2;
     void SetStructuralMatrices(Config* config);
     //void SetSolutionInTime();
-    CMatrix* GetM();
-    CMatrix* GetC();
-    CMatrix* GetK();
+    CMatrix & GetM();
+    CMatrix & GetC();
+    CMatrix & GetK();
     void SetCenterOfRotation_X(double coord_x);
     void SetCenterOfRotation_Y(double coord_y);
     void SetCenterOfRotation_Z(double coord_z);

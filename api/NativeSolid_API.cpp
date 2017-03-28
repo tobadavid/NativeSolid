@@ -8,15 +8,13 @@ const int MASTER_NODE = 0;
 
 NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp):confFile(str){
 
-int rank = MASTER_NODE;
-  int size = 1;
+  int rank = MASTER_NODE;
 
   historyFile.open("NativeHistory.dat", ios::out);
 
 /*--- MPI initialization, and buffer setting ---*/
 #ifdef HAVE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
 #endif
 
   if(rank == MASTER_NODE){
@@ -28,8 +26,7 @@ int rank = MASTER_NODE;
     output = NULL;
     geometry = NULL;
     structure = NULL;
-    solver = NULL;
-    q_uM1 = NULL;
+    integrator = NULL;
 
     /*--- Initialize the main containers ---*/
     config = new Config(confFile);
@@ -66,20 +63,19 @@ int rank = MASTER_NODE;
 
     /*--- Initialize the temporal integrator ---*/
     cout << endl << "\n----------------------- Setting integration parameter ----------------------" << endl;
-    solver = new Integration(structure);
+    integrator = new Integration(config, structure);
     if(config->GetUnsteady() == "YES"){
-      solver->SetIntegrationParam(config);
-      solver->SetInitialConditions(config, structure);
+      integrator->SetInitialConditions(config, structure);
     }
 
     cout << endl << "\n----------------------- Setting FSI features ----------------------" << endl;
-    q_uM1 = new CVector(structure->GetnDof());
-    q_uM1->Reset();
+    q_uM1.Initialize(structure->GetnDof());
+    q_uM1.Reset();
 
     if(rank == MASTER_NODE){
       if(structure->GetnDof() == 1){
         if(config->GetUnsteady() == "YES"){
-          historyFile << "\"Time\"" << "\t" << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << "\t" << "\"Acceleration variable\"" << endl;
+          historyFile << "\"Time\"" << "\t" << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << endl;
         }
         else{
           historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement\"" << endl;
@@ -87,7 +83,7 @@ int rank = MASTER_NODE;
       }
       else if(structure->GetnDof() == 2){
         if(config->GetUnsteady() == "YES"){
-          historyFile << "\"Time\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << "\t" << "\"Acceleration variable 1\"" << "\t" << "\"Acceleration variable 2\"" << endl;
+          historyFile << "\"Time\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << endl;
         }
         else{
           historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 1\"" << endl;
@@ -107,11 +103,9 @@ NativeSolidSolver::~NativeSolidSolver(){}
 void NativeSolidSolver::exit(){
 
   int rank = MASTER_NODE;
-  int size = 1;
 
 #ifdef HAVE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
 #endif
 
   historyFile.close();
@@ -123,45 +117,26 @@ void NativeSolidSolver::exit(){
   if (config != NULL) delete config;
   if (geometry != NULL) delete geometry;
   if (structure != NULL) delete structure;
-  if (solver != NULL) delete solver;
+  if (integrator != NULL) delete integrator;
   if (output != NULL) delete output;
-  if (q_uM1 != NULL) delete q_uM1;
 
 }
 
 void NativeSolidSolver::preprocessIteration(unsigned long ExtIter){
 
-    solver->SetExtIter(ExtIter);
+    integrator->SetExtIter(ExtIter);
 }
 
-void NativeSolidSolver::timeIteration(double currentTime){
+void NativeSolidSolver::timeIteration(double t0, double tf){
 
-  int rank = MASTER_NODE;
-  int size = 1;
-
-#ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-#endif
-
-  solver->TemporalIteration(config, structure);
-
-  if(rank == MASTER_NODE){
-  if(structure->GetnDof() == 1){
-    cout << " Time" << "\t" << "Displacement" << "\t" << "Velocity" << "\t" << "Acceleration" << "\t" << endl;
-    cout << " " << currentTime << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetAcc()))[0] << endl;
-  }
-  else if(structure->GetnDof() == 2){
-    cout << " Time" << "\t" << "Displacement 1" << "\t" << "Displacement 2" << "\t" << "Velocity 1"  << "\t" << "Velocity 2" << "\t" << "Acceleration 1" << "\t" << "Acceleration 2" << endl;
-    cout << currentTime << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetVel()))[1] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAcc()))[1] << endl;
-  }
-  }
+  integrator->TemporalIteration(t0, tf, structure);
 
   //mapRigidBodyMotion(false, false);
   computeInterfacePosVel(false);
 
 }
 
+/*
 void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
 
   double *Coord, *Coord_n, newCoord[3], Center[3], Center_n[3], newCenter[3], rotCoord[3], r[3];
@@ -178,12 +153,12 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
   double disp, dAlpha;
   double varCoordNorm2(0.0);
 
-  /*--- Get the current center of rotation (can vary at each iteration) ---*/
+  //--- Get the current center of rotation (can vary at each iteration) ---
   Center[0] = structure->GetCenterOfRotation_x();
   Center[1] = structure->GetCenterOfRotation_y();
   Center[2] = structure->GetCenterOfRotation_z();
 
-  /*--- Get the center of rotation from previous time step ---*/
+  //--- Get the center of rotation from previous time step ---
   Center_n[0] = structure->GetCenterOfRotation_n_x();
   Center_n[1] = structure->GetCenterOfRotation_n_y();
   Center_n[2] = structure->GetCenterOfRotation_n_z();
@@ -192,15 +167,15 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
     dTheta = 0.0;
     dPhi = 0.0;
     if (config->GetStructType() == "AIRFOIL"){
-      dPsi = -( (*(solver->GetDisp()))[1] - (*(solver->GetDisp_n()))[1]);
+      dPsi = -( (*(integrator->GetDisp()))[1] - (*(integrator->GetDisp_n()))[1]);
       newCenter[0] = Center[0];
-      newCenter[1] = -(*(solver->GetDisp()))[0];
+      newCenter[1] = -(*(integrator->GetDisp()))[0];
       newCenter[2] = Center[2];
       disp = newCenter[1] - Center_n[1];
     }
     else if(config->GetStructType() == "SPRING_HOR"){
       dPsi = 0.0;
-      newCenter[0] = (*(solver->GetDisp()))[0];
+      newCenter[0] = (*(integrator->GetDisp()))[0];
       newCenter[1] = Center[1];
       newCenter[2] = Center[2];
     }
@@ -210,16 +185,16 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
     alpha0 = 1.0;
     alpha1 = 0.5; //Second order prediction
 
-    q_n = (*(solver->GetDisp()))[0];
-    qdot_n = (*(solver->GetVel()))[0];
-    qdot_nM1 = (*(solver->GetVel_n()))[0];
+    q_n = (*(integrator->GetDisp()))[0];
+    qdot_n = (*(integrator->GetVel()))[0];
+    qdot_nM1 = (*(integrator->GetVel_n()))[0];
     q_nP1 = q_n + alpha0*deltaT*qdot_n + alpha1*deltaT*(qdot_n - qdot_nM1);
     disp = q_nP1-q_n;
 
     if(structure->GetnDof() == 2){
-      alpha_n = (*(solver->GetDisp()))[1];
-      alphadot_n = (*(solver->GetVel()))[1];
-      alphadot_nM1 = (*(solver->GetVel_n()))[1];
+      alpha_n = (*(integrator->GetDisp()))[1];
+      alphadot_n = (*(integrator->GetVel()))[1];
+      alphadot_nM1 = (*(integrator->GetVel_n()))[1];
       alpha_nP1 = alpha_n + alpha0*deltaT*alphadot_n + alpha1*deltaT*(alphadot_n - alphadot_nM1);
       dAlpha = alpha_nP1-alpha_n;
     }
@@ -239,8 +214,7 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
   cosTheta = cos(dTheta);  cosPhi = cos(dPhi);  cosPsi = cos(dPsi);
   sinTheta = sin(dTheta);  sinPhi = sin(dPhi);  sinPsi = sin(dPsi);
 
-  /*--- Compute the rotation matrix. The implicit
-  ordering is rotation about the x-axis, y-axis, then z-axis. ---*/
+  //--- Compute the rotation matrix. The implicit ordering is rotation about the x-axis, y-axis, then z-axis. ---
 
   rotMatrix[0][0] = cosPhi*cosPsi;
   rotMatrix[1][0] = cosPhi*sinPsi;
@@ -291,10 +265,10 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
 
         varCoordNorm2 += varCoord[0]*varCoord[0] + varCoord[1]*varCoord[1] + varCoord[2]*varCoord[2];
 
-        /*--- Apply change of coordinates to the node on the moving interface ---*/
+        //--- Apply change of coordinates to the node on the moving interface ---
         geometry->node[iPoint]->SetCoord(newCoord);
 
-        /*--- At initialisation, propagate the initial position of the inteface in the past ---*/
+        //--- At initialisation, propagate the initial position of the inteface in the past ---
         if(initialize) geometry->node[iPoint]->SetCoord_n(newCoord);
       }
     }
@@ -302,11 +276,12 @@ void NativeSolidSolver::mapRigidBodyMotion(bool prediction, bool initialize){
 
   varCoordNorm = sqrt(varCoordNorm2);
 
-  /*--- Update the position of the center of rotation ---*/
+  //--- Update the position of the center of rotation ---
   structure->SetCenterOfRotation_X(newCenter[0]);
   structure->SetCenterOfRotation_Y(newCenter[1]);
   structure->SetCenterOfRotation_Z(newCenter[2]);
 }
+*/
 
 void NativeSolidSolver::computeInterfacePosVel(bool initialize){
 
@@ -333,18 +308,18 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize){
     dTheta = 0.0;
     dPhi = 0.0;
     if (config->GetStructType() == "AIRFOIL"){
-      dPsi = -( (*(solver->GetDisp()))[1] - (*(solver->GetDisp_n()))[1]);
-      psidot = (*(solver->GetVel()))[1];
+      dPsi = -( (integrator->GetSolver()->GetDisp())[1] - (integrator->GetSolver()->GetDisp_n())[1] );
+      psidot = (integrator->GetSolver()->GetVel())[1];
       newCenter[0] = Center[0];
-      newCenter[1] = -(*(solver->GetDisp()))[0];
+      newCenter[1] = -(integrator->GetSolver()->GetDisp())[0];
       newCenter[2] = Center[2];
       centerVel[0] = 0.0;
-      centerVel[1] = -(*(solver->GetVel()))[0];
+      centerVel[1] = -(integrator->GetSolver()->GetVel())[0];
       centerVel[2] = 0.0;
     }
     else if(config->GetStructType() == "SPRING_HOR"){
       dPsi = 0.0;
-      newCenter[0] = (*(solver->GetDisp()))[0];
+      newCenter[0] = (integrator->GetSolver()->GetDisp())[0];
       newCenter[1] = Center[1];
       newCenter[2] = Center[2];
     }
@@ -437,6 +412,7 @@ void NativeSolidSolver::setInitialDisplacements(){
   computeInterfacePosVel(true);
 }
 
+/*
 void NativeSolidSolver::staticComputation(){
 
   int rank = MASTER_NODE;
@@ -447,15 +423,15 @@ void NativeSolidSolver::staticComputation(){
   MPI_Comm_size(MPI_COMM_WORLD, &size);
 #endif
 
-  solver->StaticIteration(config,structure);
+  integrator->StaticIteration(config,structure);
 
   if(rank == MASTER_NODE){
     if(structure->GetnDof() == 1){
-      cout << "Static Displacement : " << (*(solver->GetDisp()))[0] << endl;
+      cout << "Static Displacement : " << (*(integrator->GetDisp()))[0] << endl;
     }
     else if(structure->GetnDof() == 2){
-      cout << "Static Displacement 1 : " << (*(solver->GetDisp()))[0] << endl;
-      cout << "Static Displacement 2 : " << (*(solver->GetDisp()))[1] << endl;
+      cout << "Static Displacement 1 : " << (*(integrator->GetDisp()))[0] << endl;
+      cout << "Static Displacement 2 : " << (*(integrator->GetDisp()))[1] << endl;
     }
   }
 
@@ -463,41 +439,40 @@ void NativeSolidSolver::staticComputation(){
   computeInterfacePosVel(false);
 
 }
+*/
 
-void NativeSolidSolver::writeSolution(double currentTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter){
+void NativeSolidSolver::writeSolution(double currentTime, double lastTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter){
 
   int rank = MASTER_NODE;
-  int size = 1;
   double DeltaT;
   string restartFileName;
   unsigned long DeltaIter = config->GetDeltaIterWrite();
 
-  DeltaT = config->GetDeltaT();
+  DeltaT = currentTime-lastTime;
 
 #ifdef HAVE_MPI
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
 #endif
 
   if(rank == MASTER_NODE){
   if(structure->GetnDof() == 1){
     if(config->GetUnsteady() == "YES"){
       //if(currentTime == config->GetStartTime()) historyFile << "\"Time\"" << "\t" << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << "\t" << "\"Acceleration variable\"" << endl;
-      historyFile << currentTime << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAccVar()))[0] << endl;
+      historyFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << endl;
     }
     else{
       //if(currentFSIIter == config->GetStartTime()) historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement\"" << endl;
-      historyFile << currentFSIIter << "\t" << (*(solver->GetDisp()))[0] << endl;
+      historyFile << currentFSIIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << endl;
     }
   }
   else if(structure->GetnDof() == 2){
     if(config->GetUnsteady() == "YES"){
       //if(currentTime == config->GetStartTime()) historyFile << "\"Time\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << "\t" << "\"Acceleration variable 1\"" << "\t" << "\"Acceleration variable 2\"" << endl;
-      historyFile << currentTime << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetVel()))[1] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAcc()))[1] << "\t" << (*(solver->GetAccVar()))[0] << "\t" << (*(solver->GetAccVar()))[1] << endl;
+      historyFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetVel())[1] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAcc())[1] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[1] << endl;
     }
     else{
       //if(currentFSIIter == config->GetStartTime()) historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 1\"" << endl;
-      historyFile << currentFSIIter << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << endl;
+      historyFile << currentFSIIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << endl;
     }
   }
   }
@@ -509,13 +484,13 @@ void NativeSolidSolver::writeSolution(double currentTime, double currentFSIIter,
     restartFile.open(restartFileName.c_str(), ios::out);
     if (structure->GetnDof() == 1){
       restartFile << "\"Time\"" << "\t" << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << "\t" << "\"Acceleration variable\"" << endl;
-      restartFile << currentTime-DeltaT << "\t" << (*(solver->GetDisp_n()))[0] << "\t" << (*(solver->GetVel_n()))[0] << "\t" << (*(solver->GetAcc_n()))[0] << "\t" << (*(solver->GetAccVar_n()))[0] << endl;
-      restartFile << currentTime << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAccVar()))[0] << endl;
+      restartFile << currentTime-DeltaT << "\t" << (integrator->GetSolver()->GetDisp_n())[0] << "\t" << (integrator->GetSolver()->GetVel_n())[0] << "\t" << (integrator->GetSolver()->GetAcc_n())[0] << "\t" << (integrator->GetSolver()->GetAccVar_n())[0] << endl;
+      restartFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << endl;
     }
     else if (structure->GetnDof() == 2){
       restartFile << "\"Time\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << "\t" << "\"Acceleration variable 1\"" << "\t" << "\"Acceleration variable 2\"" << endl;
-      restartFile << currentTime-DeltaT << "\t" << (*(solver->GetDisp_n()))[0] << "\t" << (*(solver->GetDisp_n()))[1] << "\t" << (*(solver->GetVel_n()))[0] << "\t" << (*(solver->GetVel_n()))[1] << "\t" << (*(solver->GetAcc_n()))[0] << "\t" << (*(solver->GetAcc_n()))[1] << "\t" << (*(solver->GetAccVar_n()))[0] << "\t" << (*(solver->GetAccVar_n()))[1] << endl;
-      restartFile << currentTime << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetVel()))[1] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAcc()))[1] << "\t" << (*(solver->GetAccVar()))[0] << "\t" << (*(solver->GetAccVar()))[1] << endl;
+      restartFile << currentTime-DeltaT << "\t" << (integrator->GetSolver()->GetDisp_n())[0] << "\t" << (integrator->GetSolver()->GetDisp_n())[1] << "\t" << (integrator->GetSolver()->GetVel_n())[0] << "\t" << (integrator->GetSolver()->GetVel_n())[1] << "\t" << (integrator->GetSolver()->GetAcc_n())[0] << "\t" << (integrator->GetSolver()->GetAcc_n())[1] << "\t" << (integrator->GetSolver()->GetAccVar_n())[0] << "\t" << (integrator->GetSolver()->GetAccVar_n())[1] << endl;
+      restartFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetVel())[1] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAcc())[1] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[1] << endl;
     }
     restartFile.close();
   }
@@ -526,34 +501,32 @@ void NativeSolidSolver::writeSolution(double currentTime, double currentFSIIter,
 void NativeSolidSolver::saveSolution(){
 
     int rank = MASTER_NODE;
-    int size = 1;
     double DeltaT;
     //string restartFileName;
     //unsigned long DeltaIter = config->GetDeltaIterWrite();
-    unsigned long ExtIter = solver->GetExtIter();
+    unsigned long ExtIter = integrator->GetExtIter();
 
     DeltaT = config->GetDeltaT();
 
   #ifdef HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
   #endif
 
     if(rank == MASTER_NODE){
     if(structure->GetnDof() == 1){
       if(config->GetUnsteady() == "YES"){
-        historyFile << ExtIter << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAccVar()))[0] << endl;
+        historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetAcc())[0] << endl;
       }
       else{
-        historyFile << ExtIter << "\t" << (*(solver->GetDisp()))[0] << endl;
+        historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << endl;
       }
     }
     else if(structure->GetnDof() == 2){
       if(config->GetUnsteady() == "YES"){
-        historyFile << ExtIter << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << "\t" << (*(solver->GetVel()))[0] << "\t" << (*(solver->GetVel()))[1] << "\t" << (*(solver->GetAcc()))[0] << "\t" << (*(solver->GetAcc()))[1] << "\t" << (*(solver->GetAccVar()))[0] << "\t" << (*(solver->GetAccVar()))[1] << endl;
+        historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetVel())[1] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAcc())[1] << endl;
       }
       else{
-        historyFile << ExtIter << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1] << endl;
+        historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << endl;
       }
     }
     }
@@ -562,17 +535,18 @@ void NativeSolidSolver::saveSolution(){
 void NativeSolidSolver::updateSolution(){
 
   if(config->GetUnsteady() == "YES"){
-    solver->UpdateSolution();
+    integrator->UpdateSolution();
     geometry->UpdateGeometry();
     structure->SetCenterOfRotation_n_X(structure->GetCenterOfRotation_x());
     structure->SetCenterOfRotation_n_Y(structure->GetCenterOfRotation_y());
     structure->SetCenterOfRotation_n_Z(structure->GetCenterOfRotation_z());
   }
   else
-    *q_uM1 = (*(solver->GetDisp()));
+    q_uM1 = (integrator->GetSolver()->GetDisp());
 }
 
-/*void NativeSolidSolver::updateGeometry(){
+/*
+ * void NativeSolidSolver::updateGeometry(){
 
   if(config->GetUnsteady() == "YES"){
     geometry->UpdateGeometry();
@@ -582,7 +556,8 @@ void NativeSolidSolver::updateSolution(){
   }
 }*/
 
-/*void NativeSolidSolver::displacementPredictor(){
+/*
+void NativeSolidSolver::displacementPredictor(){
 
   mapRigidBodyMotion(true, false);
 
@@ -811,13 +786,13 @@ void NativeSolidSolver::setGeneralisedForce(){
   }
 
   if(config->GetStructType() == "SPRING_HOR"){
-    ((solver->GetLoads())->GetVec())[0] = ForceX;
+    (integrator->GetSolver()->GetLoads())[0] = ForceX;
   }
   else if(config->GetStructType() == "SPRING_VER"){
-    ((solver->GetLoads())->GetVec())[0] = ForceY;
+    (integrator->GetSolver()->GetLoads())[0] = ForceY;
   }
   else if(config->GetStructType() == "AIRFOIL"){
-    ((solver->GetLoads())->GetVec())[0] = -ForceY;
+    (integrator->GetSolver()->GetLoads())[0] = -ForceY;
   }
   else{
     cerr << "Wrong structural type for applying global fluild loads !" << endl;
@@ -829,13 +804,13 @@ void NativeSolidSolver::setGeneralisedForce(){
 void NativeSolidSolver::setGeneralisedForce(double Fx, double Fy){
 
   if(config->GetStructType() == "SPRING_HOR"){
-    ((solver->GetLoads())->GetVec())[0] = Fx;
+    (integrator->GetSolver()->GetLoads())[0] = Fx;
   }
   else if(config->GetStructType() == "SPRING_VER"){
-    ((solver->GetLoads())->GetVec())[0] = Fy;
+    (integrator->GetSolver()->GetLoads())[0] = Fy;
   }
   else if(config->GetStructType() == "AIRFOIL"){
-    ((solver->GetLoads())->GetVec())[0] = -Fy;
+    (integrator->GetSolver()->GetLoads())[0] = -Fy;
   }
   else{
     cerr << "Wrong structural type for applying global fluild loads !" << endl;
@@ -863,7 +838,7 @@ void NativeSolidSolver::setGeneralisedMoment(){
   }
 
   if(config->GetStructType() == "AIRFOIL"){
-    ((solver->GetLoads())->GetVec())[1] = -Moment;
+    (integrator->GetSolver()->GetLoads())[1] = -Moment;
   }
   else if(config->GetStructType() == "SPRING_VER"){}
   else if(config->GetStructType() == "SPRING_HOR"){}
@@ -877,7 +852,7 @@ void NativeSolidSolver::setGeneralisedMoment(){
 void NativeSolidSolver::setGeneralisedMoment(double M){
 
   if(config->GetStructType() == "AIRFOIL"){
-    ((solver->GetLoads())->GetVec())[1] = -M;
+    (integrator->GetSolver()->GetLoads())[1] = -M;
   }
   else if(config->GetStructType() == "SPRING_VER"){}
   else if(config->GetStructType() == "SPRING_HOR"){}

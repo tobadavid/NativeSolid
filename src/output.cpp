@@ -7,6 +7,7 @@ Output::Output(){}
 
 Output::~Output(){}
 
+/*
 void Output::WriteHistory(Integration* solver, Structure* structure, ofstream* outputfile, const double & time){
 
   if(structure->GetnDof() == 1){
@@ -59,3 +60,4 @@ void Output::WriteStaticSolution(Config* config, Integration* solver, Structure*
     outputfile[0] << -1.000 << "\t" << (*(solver->GetDisp()))[0] << "\t" << (*(solver->GetDisp()))[1];
   }
 }
+*/

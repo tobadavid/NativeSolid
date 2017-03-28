@@ -60,36 +60,32 @@ Structure::Structure(Config* config){
   }
   else nDof = 0;
 
-  M = new CMatrix(nDof,nDof);
-  C = new CMatrix(nDof, nDof);
-  K = new CMatrix(nDof, nDof);
+  M.Initialize(nDof, nDof, 0.0);
+  C.Initialize(nDof, nDof, 0.0);
+  K.Initialize(nDof, nDof, 0.0);
 }
 
-Structure::~Structure(){
-  delete M;
-  delete C;
-  delete K;
-}
+Structure::~Structure(){}
 
 void Structure::SetStructuralMatrices(Config* config){
   if(config->GetStructType() == "SPRING_HOR" || config->GetStructType() == "SPRING_VER" ){
-    K->SetElm(1,1,Kh);
-    C->SetElm(1,1,Ch);
-    M->SetElm(1,1,m);
+    K.SetElm(1,1,Kh);
+    C.SetElm(1,1,Ch);
+    M.SetElm(1,1,m);
 
     cout << "Plunging mass : " << m << " [kg]" << endl;
     cout << "Plunging damping : " << Ch << " [Ns/m]" << endl;
     cout << "Plunging stiffness : " << Kh << " [N/m]" << endl;
   }
   else if (config->GetStructType() == "AIRFOIL"){
-    M->SetElm(1,1,m);
-    M->SetElm(1,2,S);
-    M->SetElm(2,1,S);
-    M->SetElm(2,2,If);
-    K->SetElm(1,1,Kh);
-    K->SetElm(2,2,Ka);
-    C->SetElm(1,1,Ch);
-    C->SetElm(2,2,Ca);
+    M.SetElm(1,1,m);
+    M.SetElm(1,2,S);
+    M.SetElm(2,1,S);
+    M.SetElm(2,2,If);
+    K.SetElm(1,1,Kh);
+    K.SetElm(2,2,Ka);
+    C.SetElm(1,1,Ch);
+    C.SetElm(2,2,Ca);
 
     cout << "Airfoil mass : " << m << " [kg]" << endl;
     cout << "Airfoil cord : " << c << " [m]" << endl;
@@ -108,15 +104,15 @@ void Structure::SetStructuralMatrices(Config* config){
   }
 }
 
-CMatrix* Structure::GetM(){
+CMatrix & Structure::GetM(){
   return M;
 }
 
-CMatrix* Structure::GetC(){
+CMatrix & Structure::GetC(){
   return C;
 }
 
-CMatrix* Structure::GetK(){
+CMatrix & Structure::GetK(){
   return K;
 }
 

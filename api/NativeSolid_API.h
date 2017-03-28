@@ -19,11 +19,11 @@ protected:
     Config* config;
     Geometry* geometry;
     Structure* structure;
-    Integration* solver;
+    Integration* integrator;
     Output* output;
     std::ofstream historyFile;
     std::ofstream restartFile;
-    CVector* q_uM1; //The displacement at the previous FSI iteration
+    CVector q_uM1; //The displacement at the previous FSI iteration
     double omega;
     unsigned long nSolidInterfaceVertex;
     double varCoordNorm;
@@ -36,12 +36,12 @@ public:
     void exit();
     //double getVarCoordNorm() const;
     void preprocessIteration(unsigned long ExtIter);
-    void timeIteration(double currentTime);
-    void mapRigidBodyMotion(bool predicition, bool initialize);
+    void timeIteration(double t0, double tf);
+    //void mapRigidBodyMotion(bool predicition, bool initialize);
     void computeInterfacePosVel(bool initialize);
     void setInitialDisplacements();
-    void staticComputation();
-    void writeSolution(double currentTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter);
+    //void staticComputation();
+    void writeSolution(double currentTime, double lastTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter);
     void saveSolution();
     void updateSolution();
     //void updateGeometry();

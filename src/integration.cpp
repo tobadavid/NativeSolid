@@ -1,4 +1,5 @@
 #include "../include/integration.h"
+#include "../include/solver.h"
 #include <iostream>
 #include <cstdlib>
 #include <stdlib.h>
@@ -7,32 +8,29 @@
 
 using namespace std;
 
-Integration::Integration(Structure *structure){
+Integration::Integration(Config *config, Structure *structure){
 
-  unsigned int nDof = structure->GetnDof();
-  q = new CVector(nDof);
-  qdot = new CVector(nDof);
-  qddot = new CVector(nDof);
-  a = new CVector(nDof);
-  q_n = new CVector(nDof);
-  qdot_n = new CVector(nDof);
-  qddot_n = new CVector(nDof);
-  a_n = new CVector(nDof);
+  solver = NULL;
 
-  Loads = new CVector(nDof);
+  if(config->GetIntegrationAlgo() == "ALPHAGEN"){
+    solver = new AlphaGenSolver(structure->GetnDof(), config->GetRho());
+  }
+  else if(config->GetIntegrationAlgo() == "RK4"){
+    solver = new RK4Solver(structure->GetnDof());
+  }
+  else{
+
+  }
 }
 
 Integration::~Integration(){
-  delete q;
-  delete qdot;
-  delete qddot;
-  delete a;
-  delete q_n;
-  delete qdot_n;
-  delete qddot_n;
-  delete a_n;
 
-  delete Loads;
+  if (solver != NULL) delete solver;
+}
+
+Solver* Integration::GetSolver(){
+
+  return solver;
 }
 
 double Integration::GettotTime(){
@@ -41,14 +39,6 @@ double Integration::GettotTime(){
 
 double Integration::GetdeltaT(){
   return deltaT;
-}
-
-CVector* Integration::GetDisp() const{
-  return q;
-}
-
-void Integration::SetDisp(double & val_disp){
-  (*q)[0] = val_disp;
 }
 
 void Integration::SetExtIter(unsigned long val_ExtIter){
@@ -61,38 +51,7 @@ unsigned long Integration::GetExtIter(){
     return ExtIter;
 }
 
-CVector* Integration::GetVel() const{
-  return qdot;
-}
-CVector* Integration::GetAcc() const{
-  return qddot;
-}
-
-CVector* Integration::GetAccVar() const{
-  return a;
-}
-
-CVector* Integration::GetDisp_n() const{
-  return q_n;
-}
-CVector* Integration::GetVel_n() const{
-  return qdot_n;
-}
-
-CVector* Integration::GetAcc_n() const{
-  return qddot_n;
-}
-
-CVector* Integration::GetAccVar_n() const{
-  return a_n;
-}
-
-CVector* Integration::GetLoads() const{
-
-  return Loads;
-
-}
-
+/*
 void Integration::SetIntegrationParam(Config* config){
 
   totTime = config->GetStopTime();
@@ -142,7 +101,9 @@ void Integration::SetIntegrationParam(Config* config){
   cout << "gammaPrime : " << gammaPrime << endl;
   cout << "betaPrime : " << betaPrime << endl;
 }
+*/
 
+/*
 void Integration::SetLoadsAtTime(Config* config, Structure* structure, const double & time, double FSI_Load){
   if(config->GetForceInputType() == "FILE"){
     string textLine;
@@ -173,235 +134,50 @@ void Integration::SetLoadsAtTime(Config* config, Structure* structure, const dou
   }
   else cout << "Option for FORCE_INPUT_TYPE has to be specified (FILE or ANALYTICAL)" << endl;
 }
-
-void Integration::SetStaticLoads(Config* config, Structure* structure){
-  if(config->GetForceInputType() == "FILE"){
-    cout << "Setting applied force from a file : " << config->GetForceInputFile() << endl;
-    string delimiter = "\t";
-    size_t pos;
-    string ForceFileName = config->GetForceInputFile();
-    string text_line, tempString, token;
-    ifstream InputFile;
-    InputFile.open(ForceFileName.c_str(), ios::in);
-        while (getline(InputFile,text_line)){
-            tempString = text_line;
-        }
-        InputFile.close();
-    pos = tempString.find(delimiter);
-    token = tempString.substr(0,pos);
-    tempString.erase(0,pos+delimiter.length());
-    if (config->GetStructType() == "SPRING_HOR") (*Loads)[0] = atof(tempString.c_str());
-    else if (config->GetStructType() == "SPRING_VER") (*Loads)[0] = atof(token.c_str());
-    else{
-      cerr << "Not ready for AIRFOIL implementation" << endl;
-      throw(-1);
-    }
-  }
-  else if(config->GetForceInputType() == "ANALYTICAL" && config->GetAnalyticalFunction() == "CONSTANT"){
-    (*Loads)[0] = config->GetConstantForceValue();
-    if(structure->GetnDof() == 2) (*Loads)[1] = 0.0;
-  }
-  else{
-    cerr << "For static computation, the analytical function for the applied load must be CONSTANT" << endl;
-    throw(-1);
-  }
-}
+*/
 
 void Integration::SetInitialConditions(Config* config, Structure* structure){
-  string delimiter = "\t";
-  size_t pos;
-  string textLine;
-  ifstream Inputfile;
-  string RestartFile;
-  //double* qddot[nDof];
-  CVector* RHS = new CVector(structure->GetnDof(),double(0));
 
-  if(config->GetRestartSol() == "YES"){
-    string InputFileName = config->GetRestartFile();
-    string text_line;
-    string token, tempString;
-    size_t pos;
-    string delimiter = "\t";
-    ifstream InputFile;
-    InputFile.open(InputFileName.c_str(), ios::in);
-    double buffer[(4*structure->GetnDof())+1];
-    int kk = 0;
-    int jj;
-	while (getline(InputFile,text_line)){
-      tempString = text_line;
-      jj = 0;
-      if (kk == 1){
-        while ((pos = tempString.find(delimiter)) != string::npos){
-          token = tempString.substr(0,pos);
-          tempString.erase(0,pos+delimiter.length());
-          buffer[jj] = atof(token.c_str());
-          jj += 1;
-        }
-	    buffer[jj] = atof(tempString.c_str());
+  ExtIter = 0;
+  solver->SetInitialState(config, structure);
+  structure->SetCenterOfRotation_Y((solver->GetDisp())[0]);
 
-	    if(structure->GetnDof() == 1){
-	      (*q_n)[0] = buffer[1];
-	      (*qdot_n)[0] = buffer[2];
-          (*qddot_n)[0] = buffer[3];
-	      (*a_n)[0] = buffer[4];
-	    }
-	    else if (structure->GetnDof() == 2){
-	      (*q_n)[0] = buffer[1];
-	      (*q_n)[1] = buffer[2];
-	      (*qdot_n)[0] = buffer[3];
-	      (*qdot_n)[1] = buffer[4];
-	      (*qddot_n)[0] = buffer[5];
-	      (*qddot_n)[1] = buffer[6];
-	      (*a_n)[0] = buffer[7];
-	      (*a_n)[1] = buffer[8];
-	    }
-	    q_n->print();
-	    qdot_n->print();
-	    qddot_n->print();
-	    a_n->print();
-      }
-      else if (kk == 2){
-        while ((pos = tempString.find(delimiter)) != string::npos){
-          token = tempString.substr(0,pos);
-          tempString.erase(0,pos+delimiter.length());
-          buffer[jj] = atof(token.c_str());
-          jj += 1;
-        }
-	    buffer[jj] = atof(tempString.c_str());
+}
 
-	    if(structure->GetnDof() == 1){
-	      (*q)[0] = buffer[1];
-	      (*qdot)[0] = buffer[2];
-          (*qddot)[0] = buffer[3];
-	      (*a)[0] = buffer[4];
-	    }
-	    else if (structure->GetnDof() == 2){
-	      (*q)[0] = buffer[1];
-	      (*q)[1] = buffer[2];
-	      (*qdot)[0] = buffer[3];
-	      (*qdot)[1] = buffer[4];
-	      (*qddot)[0] = buffer[5];
-	      (*qddot)[1] = buffer[6];
-	      (*a)[0] = buffer[7];
-	      (*a)[1] = buffer[8];
-	    }
-	    q->print();
-	    qdot->print();
-	    qddot->print();
-	    a->print();
-      }
-      kk += 1;
-    }
-    InputFile.close();
+void Integration::TemporalIteration(double& t0, double& tf, Structure *structure){
+
+  int rank = 0;
+
+#ifdef HAVE_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+#endif
+
+  double currentTime(tf);
+  deltaT = tf - t0;
+  solver->Iterate(t0, tf, structure);
+
+  if(rank == 0){
+  if(structure->GetnDof() == 1){
+    cout << " Time" << "\t" << "Displacement" << "\t" << "Velocity" << "\t" << "Acceleration" << "\t" << endl;
+    cout << " " << currentTime << "\t" << (solver->GetDisp())[0] << "\t" << (solver->GetVel())[0] << "\t" << (solver->GetAcc())[0] << endl;
   }
-  else{
-    cout << "Setting basic initial conditions" << endl;
-    SetLoadsAtTime(config, structure, 0.0, 0.0);
-    ExtIter = 0;
-    q->Reset();
-    q_n->Reset();
-    cout << "Read initial configuration" << endl;
-    (*q)[0] = config->GetInitialDisp();
-    if(structure->GetnDof() == 2) (*q)[1] = config->GetInitialAngle();
-    cout << "Initial plunging displacement : " << (*q)[0] << endl;
-    cout << "Initial pitching displacement : " << (*q)[1] << endl;
-
-    qdot->Reset();
-    qddot->Reset();
-    *RHS += *Loads;
-    *RHS -= MatVecProd(structure->GetC(),qdot);
-    *RHS -= MatVecProd(structure->GetK(),q);
-    SolveSys(structure->GetM(),RHS);
-    *qddot = *RHS;
-    *a = *qddot;
-    //cout << (*q)[0] << endl;
-    //cout << (*q)[1] << endl;
+  else if(structure->GetnDof() == 2){
+    cout << " Time" << "\t" << "Displacement 1" << "\t" << "Displacement 2" << "\t" << "Velocity 1"  << "\t" << "Velocity 2" << "\t" << "Acceleration 1" << "\t" << "Acceleration 2" << endl;
+    cout << currentTime << "\t" << (solver->GetDisp())[0] << "\t" << (solver->GetDisp())[1] << "\t" << (solver->GetVel())[0] << "\t" << (solver->GetVel())[1] << "\t" << (solver->GetAcc())[0] << "\t" << (solver->GetAcc())[1] << endl;
   }
-
-  structure->SetCenterOfRotation_Y((*q)[0]);
-
-  delete RHS;
-  RHS = NULL;
-}
-
-void Integration::ComputeResidual(CMatrix* M, CMatrix* C, CMatrix* K, CVector* res){
-  *res += MatVecProd(M,qddot);
-  *res += MatVecProd(C,qdot);
-  *res += MatVecProd(K,q);
-  *res -= *Loads;
-}
-
-void Integration::ComputeTangentOperator(Structure* structure, CMatrix* St){
-  *St += ScalMatProd(betaPrime,structure->GetM());
-  *St += ScalMatProd(gammaPrime,structure->GetC());
-  *St += *(structure->GetK());
-}
-
-void Integration::TemporalIteration(Config *config, Structure *structure){
-
-  double epsilon = 1e-6;
-
-  /*--- Prediction phase ---*/
-  qddot->Reset();
-
-  a->Reset();
-  *a += ScalVecProd(alpha_f/(1-alpha_m),qddot_n);
-  *a -= ScalVecProd(alpha_m/(1-alpha_m),a_n);
-
-  *q = *q_n;
-  *q += ScalVecProd(deltaT,qdot_n);
-  *q += ScalVecProd((0.5-beta)*deltaT*deltaT,a_n);
-  *q += ScalVecProd(deltaT*deltaT*beta,a);
-
-  *qdot = *qdot_n;
-  *qdot += ScalVecProd((1-gamma)*deltaT,a_n);
-  *qdot += ScalVecProd(deltaT*gamma,a);
-
-  /*--- Tangent operator and corrector computation ---*/
-  CVector* res;
-  CVector* Deltaq;
-  CMatrix* St;
-  res = new CVector(qddot->GetSize(),double(0));
-  Deltaq = new CVector(qddot->GetSize(),double(0));
-  St = new CMatrix(qddot->GetSize(),qddot->GetSize(),double(0));
-  ComputeResidual(structure->GetM(),structure->GetC(),structure->GetK(),res);
-  while (res->norm() >= epsilon){
-    St->Reset();
-    ComputeTangentOperator(structure,St);
-    SolveSys(St,res);
-    //*res -= ScalVecProd(double(2),res); //=deltaq
-    *Deltaq += ScalVecProd(-1,res);
-    *q += *Deltaq;
-    *qdot += ScalVecProd(gammaPrime,Deltaq);
-    *qddot += ScalVecProd(betaPrime,Deltaq);
-    res->Reset();
-    Deltaq->Reset();
-    ComputeResidual(structure->GetM(),structure->GetC(),structure->GetK(),res);
   }
-  *a += ScalVecProd((1-alpha_f)/(1-alpha_m),qddot);
-
-  delete res;
-  delete Deltaq;
-  delete St;
-  Deltaq = NULL;
-  res = NULL;
-  St = NULL;
 }
 
+/*
 void Integration::StaticIteration(Config *config, Structure *structure){
   q->Reset();
   *q += *Loads;
   SolveSys(structure->GetK(),q); //q will be updated with the new solution...
 }
+*/
 
 void Integration::UpdateSolution(){
 
-  *q_n = *q;
-  //q->Reset();
-  *qdot_n = *qdot;
-  //qdot->Reset();
-  *qddot_n = *qddot;
-  //qddot->Reset();
-  *a_n = *a;
-  //a->Reset();
+  solver->SaveToThePast();
+
 }

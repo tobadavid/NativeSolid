@@ -51,11 +51,8 @@ void Config::ReadConfig()
 	else if (option == "MESH_FILE") MESH_FILE = text_line;
 	else if (option == "UNSTEADY_SIMULATION") UNSTEADY_SIMULATION = text_line;
 	else if (option == "STRUCT_TYPE") STRUCT_TYPE = text_line;
-	else if (option == "FORCE_INPUT_TYPE") FORCE_INPUT_TYPE = text_line;
-	else if (option == "FORCE_INPUT_FILE") FORCE_INPUT_FILE = text_line;
-	else if (option == "ANALYTICAL_FUNCTION") ANALYTICAL_FUNCTION = text_line;
-	else if (option == "INTEGRATION_ALGO") INTEGRATION_ALGO = text_line;
-    else if (option == "RESTART_SOL") RESTART_SOL = text_line;
+        else if (option == "INTEGRATION_ALGO") INTEGRATION_ALGO = text_line;
+        else if (option == "RESTART_SOL") RESTART_SOL = text_line;
 	else if (option == "RESTART_FILE") RESTART_FILE = text_line;
 	else if (option == "MOVING_MARKER") MOVING_MARKER = text_line;
 	else if (option == "SPRING_MASS") SPRING_MASS = atof(text_line.c_str());
@@ -68,16 +65,12 @@ void Config::ReadConfig()
 	else if (option == "CORD") CORD = atof(text_line.c_str());
 	else if (option == "FLEXURAL_AXIS") FLEXURAL_AXIS = atof(text_line.c_str());
 	else if (option == "GRAVITY_CENTER") GRAVITY_CENTER = atof(text_line.c_str());
-    else if (option == "INITIAL_DISP") INITIAL_DISP = atof(text_line.c_str());
-    else if (option == "INITIAL_ANGLE") INITIAL_ANGLE = atof(text_line.c_str());
+        else if (option == "INITIAL_DISP") INITIAL_DISP = atof(text_line.c_str());
+        else if (option == "INITIAL_ANGLE") INITIAL_ANGLE = atof(text_line.c_str());
 	else if (option == "START_TIME") START_TIME = atof(text_line.c_str());
 	else if (option == "DELTA_T") DELTA_T = atof(text_line.c_str());
 	else if (option == "DELTA_ITER_WRITE") DELTAITERWRITE = atol(text_line.c_str());
 	else if (option == "STOP_TIME") STOP_TIME = atof(text_line.c_str());
-	else if (option == "AMPLITUDE") AMPLITUDE = atof(text_line.c_str());
-	else if (option == "FREQUENCY") FREQUENCY = atof(text_line.c_str());
-	else if (option == "CONSTANT_FORCE_VALUE") CONSTANT_FORCE_VALUE = atof(text_line.c_str());
-	else if (option == "ALPHA") ALPHA = atof(text_line.c_str());
 	else if (option == "RHO") RHO = atof(text_line.c_str());
         else cout << "The option " + option + " is not recognized !" << endl;
 	}
@@ -115,21 +108,6 @@ std::string Config::GetStructType()
     return STRUCT_TYPE;
 }
 
-std::string Config::GetForceInputType()
-{
-    return FORCE_INPUT_TYPE;
-}
-
-std::string Config::GetForceInputFile()
-{
-    return FORCE_INPUT_FILE;
-}
-
-std::string Config::GetAnalyticalFunction()
-{
-    return ANALYTICAL_FUNCTION;
-}
-
 std::string Config::GetIntegrationAlgo()
 {
     return INTEGRATION_ALGO;
@@ -164,18 +142,6 @@ unsigned long Config::GetDeltaIterWrite(){
 
 double Config::GetStopTime(){
     return STOP_TIME;
-}
-
-double Config::GetFrequency(){
-    return FREQUENCY;
-}
-
-double Config::GetAmplitude(){
-    return AMPLITUDE;
-}
-
-double Config::GetConstantForceValue(){
-    return CONSTANT_FORCE_VALUE;
 }
 
 double Config::GetSpringStiffness(){
@@ -224,10 +190,6 @@ double Config::GetInitialDisp(){
 
 double Config::GetInitialAngle(){
   return INITIAL_ANGLE;
-}
-
-double Config::GetAlpha(){
-    return ALPHA;
 }
 
 double Config::GetRho(){
