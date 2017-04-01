@@ -9,8 +9,8 @@ ADD_LIBRARY(Native SHARED ../include/config.h ../include/geometry.h ../include/i
 INCLUDE_DIRECTORIES( ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/api
 )
 
-TARGET_LINK_LIBRARIES(Native lapacke cblas)
+TARGET_LINK_LIBRARIES(Native lapacke cblas blas)
 
 #ADD_EXECUTABLE(NativeSolid ../include/Native.h ../api/main.cpp)
 ADD_EXECUTABLE(TestCVector ../include/MatVec.h MatVec.cpp testcvector.cpp)
-TARGET_LINK_LIBRARIES(TestCVector lapacke cblas)
+TARGET_LINK_LIBRARIES(TestCVector lapacke cblas blas)
