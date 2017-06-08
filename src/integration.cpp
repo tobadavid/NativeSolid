@@ -11,12 +11,15 @@ using namespace std;
 Integration::Integration(Config *config, Structure *structure){
 
   solver = NULL;
+  bool linear;
+
+  linear = (config->GetLinearize()) == "YES";
 
   if(config->GetIntegrationAlgo() == "ALPHAGEN"){
-    solver = new AlphaGenSolver(structure->GetnDof(), config->GetRho());
+    solver = new AlphaGenSolver(structure->GetnDof(), config->GetRho(), linear);
   }
   else if(config->GetIntegrationAlgo() == "RK4"){
-    solver = new RK4Solver(structure->GetnDof());
+    solver = new RK4Solver(structure->GetnDof(), linear);
   }
   else{
 
@@ -50,91 +53,6 @@ unsigned long Integration::GetExtIter(){
 
     return ExtIter;
 }
-
-/*
-void Integration::SetIntegrationParam(Config* config){
-
-  totTime = config->GetStopTime();
-  deltaT = config->GetDeltaT();
-  ExtIter = 0;
-  algo = config->GetIntegrationAlgo();
-
-  if(algo == "NEWMARK"){
-    gamma = 0.5;
-    beta = 0.25*pow((gamma+0.5),2);
-    alpha_m = 0;
-    alpha_f = 0;
-    cout << "Integration with the Newmark algorithm :" << endl;
-    cout << "gamma : " << gamma << endl;
-    cout << "beta : " << beta << endl;
-  }
-  else if(algo == "HHT"){
-    alpha_f = config->GetAlpha();
-    alpha_m = 0;
-    gamma = 0.5+alpha_f;
-    beta = 0.25*pow((gamma+0.5),2);
-    cout << "Integration with the Hilbert-Hugues-Taylor algorithm :" << endl;
-    cout << "alpha : " << alpha_f << endl;
-    cout << "gamma : " << gamma << endl;
-    cout << "beta : " << beta << endl;
-  }
-  else if(algo == "ALPHAGEN"){
-    rho = config->GetRho();
-    alpha_m = (2*rho-1)/(rho+1);
-    alpha_f = rho/(rho+1);
-    gamma = 0.5+alpha_f-alpha_m;
-    beta = 0.25*pow((gamma+0.5),2);
-    cout << "Integration with the alpha-generalized algorithm :" << endl;
-    cout << "rho : " << rho << endl;
-    cout << "alpha_m : " << alpha_m << endl;
-    cout << "alpha_f : " << alpha_f << endl;
-    cout << "gamma : " << gamma << endl;
-    cout << "beta : " << beta << endl;
-  }
-  else{
-    cout << "Specified integration algorithm is not recognized !" << endl;
-    //Faire sortir !!
-  }
-
-  gammaPrime = gamma/(deltaT*beta);
-  betaPrime = (1-alpha_m)/(pow(deltaT,2)*beta*(1-alpha_f));
-  cout << "gammaPrime : " << gammaPrime << endl;
-  cout << "betaPrime : " << betaPrime << endl;
-}
-*/
-
-/*
-void Integration::SetLoadsAtTime(Config* config, Structure* structure, const double & time, double FSI_Load){
-  if(config->GetForceInputType() == "FILE"){
-    string textLine;
-    string ForceFileName = config->GetForceInputFile();
-    ifstream InputFile;
-    InputFile.open(ForceFileName.c_str(), ios::in);
-    int kk(0);
-    while (getline(InputFile,textLine)){
-      if(kk>=structure->GetnDof()) break;
-      Loads[kk] = atof(textLine.c_str());
-      kk++;
-    }
-    InputFile.close();
-  }
-  else if (config->GetForceInputType() == "ANALYTICAL"){
-    if(config->GetUnsteady() == "YES" && config->GetAnalyticalFunction() == "SINE"){
-      (*Loads)[0] = config->GetAmplitude()*sin(2*PI*config->GetFrequency()*time);
-      if(structure->GetnDof() == 2) (*Loads)[1] = config->GetAmplitude()/2.0*sin(2*PI*config->GetFrequency()*time-0.5*PI);
-      //if(structure->GetnDof() == 2) (*Loads)[1] = 0;
-      //cout << (*Loads)[0] << endl;
-    }
-    else if (config->GetUnsteady() != "YES" && config->GetAnalyticalFunction() == "CONSTANT"){
-    }
-  }
-  else if (config->GetForceInputType() == "FSI"){
-    (*Loads)[0] = FSI_Load;
-    if(structure->GetnDof() == 2) (*Loads)[1] = 0.0;
-  }
-  else cout << "Option for FORCE_INPUT_TYPE has to be specified (FILE or ANALYTICAL)" << endl;
-}
-*/
 
 void Integration::SetInitialConditions(Config* config, Structure* structure){
 

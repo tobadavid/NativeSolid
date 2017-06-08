@@ -4,11 +4,12 @@
 
 #include <iostream>
 #include <fstream>
+#include <cmath>
 
 using namespace std;
 
 /* CLASS SOLVER*/
-Solver::Solver(unsigned int nDof){
+Solver::Solver(unsigned int nDof, bool bool_linear){
 
   q.Initialize(nDof, 0.0);
   qdot.Initialize(nDof, 0.0);
@@ -22,6 +23,8 @@ Solver::Solver(unsigned int nDof){
   ResetSolution();
   Loads.Reset();
   Loads_n.Reset();
+
+  linear = bool_linear;
 
 }
 
@@ -84,7 +87,7 @@ void Solver::SaveToThePast(){
 void Solver::SetInitialState(Config *config, Structure* structure){}
 
 /*CLASS ALPHAGENSOLVER*/
-AlphaGenSolver::AlphaGenSolver(unsigned int nDof, double val_rho) : Solver(nDof) {
+AlphaGenSolver::AlphaGenSolver(unsigned int nDof, double val_rho, bool bool_linear) : Solver(nDof, bool_linear) {
 
   a.Initialize(nDof, 0.0);
   a_n.Initialize(nDof, 0.0);
@@ -139,12 +142,8 @@ void AlphaGenSolver::Iterate(double &t0, double &tf, Structure *structure){
   CVector res(qddot.GetSize(), 0.0);
   CVector Deltaq(qddot.GetSize(), 0.0);
   CMatrix St(qddot.GetSize(), qddot.GetSize(), 0.0);
-  //res = new CVector(qddot->GetSize(),double(0));
-  //Deltaq = new CVector(qddot->GetSize(),double(0));
-  //St = new CMatrix(qddot->GetSize(),qddot->GetSize(),double(0));
-  ComputeResidual(structure->GetM(),structure->GetC(),structure->GetK(),res);
+  ComputeResidual(structure,res);
   while (res.norm() >= epsilon){
-    St.Reset();
     ComputeTangentOperator(structure,St);
     SolveSys(St,res);
     //*res -= ScalVecProd(double(2),res); //=deltaq
@@ -152,31 +151,131 @@ void AlphaGenSolver::Iterate(double &t0, double &tf, Structure *structure){
     q += Deltaq;
     qdot += ScalVecProd(gammaPrime,Deltaq);
     qddot += ScalVecProd(betaPrime,Deltaq);
-    res.Reset();
     Deltaq.Reset();
-    ComputeResidual(structure->GetM(),structure->GetC(),structure->GetK(),res);
+    ComputeResidual(structure,res);
   }
   a += ScalVecProd((1-alpha_f)/(1-alpha_m),qddot);
 
-  //delete res;
-  //delete Deltaq;
-  //delete St;
-  //Deltaq = NULL;
-  //res = NULL;
-  //St = NULL;
 }
 
-void AlphaGenSolver::ComputeResidual(const CMatrix & M, const CMatrix & C, const CMatrix & K, CVector & res){
-  res += MatVecProd(M,qddot);
-  res += MatVecProd(C,qdot);
-  res += MatVecProd(K,q);
-  res -= Loads;
+void AlphaGenSolver::ComputeRHS(Structure* structure, CVector &RHS){
+
+  unsigned long size = q.GetSize();
+  CMatrix CC(size, size, 0.0);
+  CMatrix KK(size, size, 0.0);
+  CVector NonLinTerm(size, 0.0);
+
+  double cos_a;
+
+
+  if(structure->GetnDof() == 1){
+    KK.SetElm(1,1,structure->Get_Kh());
+    CC.SetElm(1,1,structure->Get_Ch());
+  }
+  else if(structure->GetnDof() == 2){
+    if(linear){
+      cos_a = 1.0;
+    }
+    else{
+      cos_a = cos(q[1]);
+      NonLinTerm[0] = (structure->Get_S())*sin(q[1])*pow(qdot[1],2);
+    }
+    CC.SetElm(1,1,structure->Get_Ch());
+    CC.SetElm(2,2,structure->Get_Ca());
+    KK.SetElm(1,1,structure->Get_Kh());
+    KK.SetElm(2,2,structure->Get_Ka());
+  }
+  else{
+
+  }
+
+  RHS += Loads;
+  RHS -= MatVecProd(CC, qdot);
+  RHS -= MatVecProd(KK, q);
+  RHS += NonLinTerm;
+}
+
+void AlphaGenSolver::ComputeResidual(Structure *structure, CVector & res){
+
+  res.Reset();
+
+  unsigned long size = q.GetSize();
+  CMatrix MM(size, size, 0.0);
+  double cos_a;
+
+
+  if(structure->GetnDof() == 1){
+    MM.SetElm(1,1, structure->Get_m());
+  }
+  else if(structure->GetnDof() == 2){
+    if(linear){
+      cos_a = 1.0;
+    }
+    else{
+      cos_a = cos(q[1]);
+    }
+    MM.SetElm(1,1, structure->Get_m());
+    MM.SetElm(1,2,(structure->Get_S())*cos_a);
+    MM.SetElm(2,1,(structure->Get_S())*cos_a);
+    MM.SetElm(2,2,structure->Get_If());
+  }
+  else{
+
+  }
+
+  CVector RHS(size, 0.0);
+  ComputeRHS(structure, RHS);
+
+  res = MatVecProd(MM, qddot) - RHS;
 }
 
 void AlphaGenSolver::ComputeTangentOperator(Structure* structure, CMatrix &St){
-  St += ScalMatProd(betaPrime,structure->GetM());
-  St += ScalMatProd(gammaPrime,structure->GetC());
-  St += structure->GetK();
+
+  St.Reset();
+
+  unsigned long size = q.GetSize();
+  CMatrix MM(size, size, 0.0);
+  CMatrix Ct(size, size, 0.0);
+  CMatrix Kt(size, size, 0.0);
+
+  if(structure->GetnDof() == 1){
+    MM.SetElm(1,1, structure->Get_m());
+    Kt.SetElm(1,1,-(structure->Get_Kh()));
+    Ct.SetElm(1,1,-(structure->Get_Ch()));
+  }
+  else if(structure->GetnDof() == 2){
+    if(linear){
+      MM.SetElm(1,1, structure->Get_m());
+      MM.SetElm(1,2,(structure->Get_S()));
+      MM.SetElm(2,1,(structure->Get_S()));
+      MM.SetElm(2,2,structure->Get_If());
+      Ct.SetElm(1,1,-(structure->Get_Ch()));
+      Ct.SetElm(2,2,-(structure->Get_Ca()));
+      Kt.SetElm(1,1,-(structure->Get_Kh()));
+      Kt.SetElm(2,2,-(structure->Get_Ka()));
+    }
+    else{
+      MM.SetElm(1,1, structure->Get_m());
+      MM.SetElm(1,2,(structure->Get_S())*cos(q[1]));
+      MM.SetElm(2,1,(structure->Get_S())*cos(q[1]));
+      MM.SetElm(2,2,structure->Get_If());
+      Ct.SetElm(1,1,-(structure->Get_Ch()));
+      Ct.SetElm(1,2,(structure->Get_S())*sin(q[1])*2*qdot[1]);
+      Ct.SetElm(2,2,-(structure->Get_Ca()));
+      Kt.SetElm(1,1,-(structure->Get_Kh()));
+      Kt.SetElm(1,2,(structure->Get_S())*cos(q[1])*pow(qdot[1],2));
+      Kt.SetElm(2,2,-(structure->Get_Ka()));
+    }
+
+  }
+  else{
+
+  }
+
+  St += ScalMatProd(betaPrime, MM);
+  St += ScalMatProd(gammaPrime, Ct);
+  St += Kt;
+
 }
 
 void AlphaGenSolver::ResetSolution(){
@@ -194,8 +293,6 @@ void AlphaGenSolver::SaveToThePast(){
 }
 
 void AlphaGenSolver::SetInitialState(Config* config, Structure* structure){
-
-  CVector RHS(structure->GetnDof(),double(0));
 
   if(config->GetRestartSol() == "YES"){
     string InputFileName = config->GetRestartFile();
@@ -284,20 +381,46 @@ void AlphaGenSolver::SetInitialState(Config* config, Structure* structure){
     if(structure->GetnDof() == 2) q[1] = config->GetInitialAngle();
     cout << "Initial plunging displacement : " << q[0] << endl;
     cout << "Initial pitching displacement : " << q[1] << endl;
-    qdot.Reset();
 
+    qdot.Reset();
     qddot.Reset();
-    RHS += Loads;
-    RHS -= MatVecProd(structure->GetC(),qdot);
-    RHS -= MatVecProd(structure->GetK(),q);
-    SolveSys(structure->GetM(),RHS);
+
+    unsigned long size = q.GetSize();
+    CVector RHS(size, 0.0);
+    CMatrix MM(size, size, 0.0);
+
+    double cos_a;
+
+
+    if(structure->GetnDof() == 1){
+      MM.SetElm(1,1, structure->Get_m());
+    }
+    else if(structure->GetnDof() == 2){
+      if(linear){
+        cos_a = 1.0;
+      }
+      else{
+        cos_a = cos(q[1]);
+      }
+      MM.SetElm(1,1, structure->Get_m());
+      MM.SetElm(1,2,(structure->Get_S())*cos_a);
+      MM.SetElm(2,1,(structure->Get_S())*cos_a);
+      MM.SetElm(2,2,structure->Get_If());
+    }
+    else{
+
+    }
+
+    ComputeRHS(structure, RHS);
+    SolveSys(MM, RHS);
     qddot = RHS;
     a = qddot;
+
   }
 }
 
 /*CLASS RK4 SOLVER*/
-RK4Solver::RK4Solver(unsigned nDof) : Solver(nDof){
+RK4Solver::RK4Solver(unsigned nDof, bool bool_linear) : Solver(nDof, bool_linear){
   size = nDof;
   lastTime = 0.0;
   currentTime = 0.0;
@@ -306,8 +429,6 @@ RK4Solver::RK4Solver(unsigned nDof) : Solver(nDof){
 RK4Solver::~RK4Solver(){}
 
 void RK4Solver::Iterate(double& t0, double& tf, Structure *structure){
-
-  //cout << "ITERATE !!" << endl;
 
   double h = tf-t0;
   lastTime = t0;
@@ -326,25 +447,15 @@ void RK4Solver::Iterate(double& t0, double& tf, Structure *structure){
   CVector TEMP(2*size);
 
   EvaluateStateDerivative(lastTime, state0, k1, structure);
-  //cout << "OKKKKK" << endl;
   TEMP = state0+(k1*(h/2.0));
   EvaluateStateDerivative(lastTime+h/2.0, TEMP, k2, structure);
-  //cout << "OKKKKK" << endl;
   TEMP = state0+(k2*(h/2.0));
   EvaluateStateDerivative(lastTime+h/2.0, TEMP, k3, structure);
-  //cout << "OKKKKK" << endl;
   TEMP = state0+(k3*h);
   EvaluateStateDerivative(lastTime+h, TEMP, k4, structure);
 
-  //cout << "Ready" << endl;
-  //cout << k1.GetSize() << endl;
-  //cout << k2.GetSize() << endl;
-  //cout << k3.GetSize() << endl;
-  //cout << k4.GetSize() << endl;
-  //cout << state0.GetSize() << endl;
   statef = state0 + ((k1 + k2*2.0 + k3*2.0 + k4)*(h/6.0));
 
-  cout << "Last evaluate" << endl;
   EvaluateStateDerivative(lastTime+h, statef, statef_dot, structure);
 
   if(structure->GetnDof() == 1){
@@ -370,19 +481,41 @@ void RK4Solver::EvaluateStateDerivative(double tCurrent, CVector &state, CVector
   CVector stateLoads(size, 0.0);
   interpLoads(tCurrent, stateLoads);
 
-  CVector RHS(size, 0.0);
-
-  //cout << "EVALUATE" << endl;
+  CMatrix MM(size, size, 0.0);
+  CMatrix CC(size, size, 0.0);
+  CMatrix KK(size, size, 0.0);
+  CVector NonLinTerm(size, 0.0);
+  CVector RHS(size, 0.0);  
 
   CVector q_current(size, 0.0);
   CVector qdot_current(size, 0.0);
   CVector qddot_current(size, 0.0);
+
   if(structure->GetnDof() == 1){
+    MM.SetElm(1,1, structure->Get_m());
+    KK.SetElm(1,1,structure->Get_Kh());
+    CC.SetElm(1,1,structure->Get_Ch());
     q_current[0] = state[0];
     qdot_current[0] = state[1];
     stateDerivative[0] = state[1];
   }
   else if (structure->GetnDof() == 2){
+    double cos_a;
+    if(linear){
+      cos_a = 1.0;
+    }
+    else{
+      cos_a = cos(state[1]);
+      NonLinTerm[0] = (structure->Get_S())*sin(state[1])*pow(state[3],2);
+    }
+    MM.SetElm(1,1, structure->Get_m());
+    MM.SetElm(1,2,(structure->Get_S())*cos_a);
+    MM.SetElm(2,1,(structure->Get_S())*cos_a);
+    MM.SetElm(2,2,structure->Get_If());
+    CC.SetElm(1,1,structure->Get_Ch());
+    CC.SetElm(2,2,structure->Get_Ca());
+    KK.SetElm(1,1,structure->Get_Kh());
+    KK.SetElm(2,2,structure->Get_Ka());
     q_current[0] = state[0];
     q_current[1] = state[1];
     qdot_current[0] = state[2];
@@ -395,10 +528,11 @@ void RK4Solver::EvaluateStateDerivative(double tCurrent, CVector &state, CVector
   }
 
   RHS += stateLoads;
-  RHS -= MatVecProd(structure->GetC(), qdot_current);
-  RHS -= MatVecProd(structure->GetK(), q_current);
+  RHS -= MatVecProd(CC, qdot_current);
+  RHS -= MatVecProd(KK, q_current);
+  RHS += NonLinTerm;
 
-  SolveSys(structure->GetM(),RHS);
+  SolveSys(MM, RHS);
   qddot_current = RHS;
 
   if(structure->GetnDof() == 1){

@@ -17,9 +17,10 @@ protected:
     CVector Loads_n;
     CVector a;
     CVector a_n;
+    bool linear;
 
 public:
-    Solver(unsigned int nDof);
+    Solver(unsigned int nDof, bool bool_linear);
     virtual ~Solver();
     virtual void Iterate(double& t0, double& tf, Structure* structure);
     virtual CVector & GetDisp();
@@ -49,12 +50,13 @@ protected:
     double betaPrime;
 
 public:
-  AlphaGenSolver(unsigned int nDof, double val_rho);
+  AlphaGenSolver(unsigned int nDof, double val_rho, bool bool_linear);
   ~AlphaGenSolver();
   CVector & GetAccVar();
   CVector & GetAccVar_n();
   virtual void Iterate(double& t0, double& tf, Structure* structure);
-  void ComputeResidual(const CMatrix &M, const CMatrix &C, const CMatrix &K, CVector &res);
+  void ComputeRHS(Structure* structure, CVector &RHS);
+  void ComputeResidual(Structure* structure, CVector &res);
   void ComputeTangentOperator(Structure* structure, CMatrix & St);
   void ResetSolution();
   void SaveToThePast();
@@ -67,13 +69,11 @@ class RK4Solver : public Solver {
 
 protected:
   unsigned int size;
-  //CVector* Q;
-  //CVector* Q_dot;
   double lastTime;
   double currentTime;
 
 public:
-    RK4Solver(unsigned nDof);
+    RK4Solver(unsigned nDof, bool bool_linear);
     ~RK4Solver();
     virtual void Iterate(double &t0, double &tf, Structure* structure);
     void EvaluateStateDerivative(double tCurrent, CVector& state, CVector& stateDerivative, Structure* structure);

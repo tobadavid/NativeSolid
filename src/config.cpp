@@ -51,6 +51,7 @@ void Config::ReadConfig()
 	else if (option == "MESH_FILE") MESH_FILE = text_line;
 	else if (option == "UNSTEADY_SIMULATION") UNSTEADY_SIMULATION = text_line;
 	else if (option == "STRUCT_TYPE") STRUCT_TYPE = text_line;
+        else if (option == "LINEARIZE") LINEARIZE = text_line;
         else if (option == "INTEGRATION_ALGO") INTEGRATION_ALGO = text_line;
         else if (option == "RESTART_SOL") RESTART_SOL = text_line;
 	else if (option == "RESTART_FILE") RESTART_FILE = text_line;
@@ -106,6 +107,10 @@ std::string Config::GetCSDSolver()
 std::string Config::GetStructType()
 {
     return STRUCT_TYPE;
+}
+
+std::string Config::GetLinearize(){
+    return LINEARIZE;
 }
 
 std::string Config::GetIntegrationAlgo()

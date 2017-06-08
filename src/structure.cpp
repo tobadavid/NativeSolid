@@ -35,6 +35,9 @@ Structure::Structure(Config* config){
     If = 0;
     cout << "Setting mass-spring-damper system" << endl;
     cout << "Number of DOF : " << nDof << endl;
+    cout << "Plunging mass : " << m << " [kg]" << endl;
+    cout << "Plunging damping : " << Ch << " [Ns/m]" << endl;
+    cout << "Plunging stiffness : " << Kh << " [N/m]" << endl;
   }
   else if (config->GetStructType() == "AIRFOIL"){
     nDof = 2;
@@ -54,39 +57,6 @@ Structure::Structure(Config* config){
     //Ia = 1.0/3.0*m*(c*c-3*c*xf+3*xf*xf);
     cout << "Setting pitching-plunging airfoil system" << endl;
     cout << "Number of DOF : " << nDof << endl;
-
-    centerOfRotation[0] = xf;
-    centerOfRotation_n[0] = xf;
-  }
-  else nDof = 0;
-
-  M.Initialize(nDof, nDof, 0.0);
-  C.Initialize(nDof, nDof, 0.0);
-  K.Initialize(nDof, nDof, 0.0);
-}
-
-Structure::~Structure(){}
-
-void Structure::SetStructuralMatrices(Config* config){
-  if(config->GetStructType() == "SPRING_HOR" || config->GetStructType() == "SPRING_VER" ){
-    K.SetElm(1,1,Kh);
-    C.SetElm(1,1,Ch);
-    M.SetElm(1,1,m);
-
-    cout << "Plunging mass : " << m << " [kg]" << endl;
-    cout << "Plunging damping : " << Ch << " [Ns/m]" << endl;
-    cout << "Plunging stiffness : " << Kh << " [N/m]" << endl;
-  }
-  else if (config->GetStructType() == "AIRFOIL"){
-    M.SetElm(1,1,m);
-    M.SetElm(1,2,S);
-    M.SetElm(2,1,S);
-    M.SetElm(2,2,If);
-    K.SetElm(1,1,Kh);
-    K.SetElm(2,2,Ka);
-    C.SetElm(1,1,Ch);
-    C.SetElm(2,2,Ca);
-
     cout << "Airfoil mass : " << m << " [kg]" << endl;
     cout << "Airfoil cord : " << c << " [m]" << endl;
     cout << "Position of the flexural axis : " << xf << " [m]" << endl;
@@ -97,24 +67,18 @@ void Structure::SetStructuralMatrices(Config* config){
     cout << "Pitching stiffness : " << Ka << " [N]" << endl;
     cout << "Position of the center of gravity : " << xCG << " [m]" << endl;
     cout << "Static unbalance : " << S << " [kg m]" << endl;
+
+    centerOfRotation[0] = xf;
+    centerOfRotation_n[0] = xf;
   }
   else{
+    nDof = 0;
     cerr << "Invalid structural type. Available choices are : SPRIN_HOR, SPRING_VER and AIRFOIL." << endl;
     throw(-1);
   }
 }
 
-CMatrix & Structure::GetM(){
-  return M;
-}
-
-CMatrix & Structure::GetC(){
-  return C;
-}
-
-CMatrix & Structure::GetK(){
-  return K;
-}
+Structure::~Structure(){}
 
 void Structure::SetCenterOfRotation_X(double coord_x){
   centerOfRotation[0] = coord_x;
@@ -168,6 +132,41 @@ double Structure::GetCenterOfRotation_n_z() const{
   return centerOfRotation_n[2];
 }
 
-unsigned int Structure::GetnDof(){
+unsigned int Structure::GetnDof() const{
   return nDof;
+}
+
+double Structure::Get_m() const{
+
+  return m;
+}
+
+double Structure::Get_Kh() const{
+
+  return Kh;
+}
+
+double Structure::Get_Ka() const{
+
+  return Ka;
+}
+
+double Structure::Get_Ch() const{
+
+  return Ch;
+}
+
+double Structure::Get_Ca() const{
+
+  return Ca;
+}
+
+double Structure::Get_S() const{
+
+  return S;
+}
+
+double Structure::Get_If() const{
+
+  return If;
 }

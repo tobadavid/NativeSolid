@@ -43,7 +43,6 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp):confFile(str){
     /*--- Initialize structural container and create the structural model ---*/
     cout << endl << "\n----------------------- Creating the structural model ----------------------" << endl;
     structure = new Structure(config);
-    structure->SetStructuralMatrices(config);
 
     cout << endl << "\n----------------------- Creating the FSI interface ----------------------" << endl;
     double* Coord;

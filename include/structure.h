@@ -20,24 +20,13 @@ protected:
     double S;
     double ICG;
     double If;
-    CMatrix M;
-    CMatrix C;
-    CMatrix K;
     double centerOfRotation[3];
     double centerOfRotation_n[3];
-    //double* interfaceCoord;
-    //CVector* InitialSolution;
 
 
 public:
     Structure(Config* config);
     virtual ~Structure();
-    //void readMeshSU2;
-    void SetStructuralMatrices(Config* config);
-    //void SetSolutionInTime();
-    CMatrix & GetM();
-    CMatrix & GetC();
-    CMatrix & GetK();
     void SetCenterOfRotation_X(double coord_x);
     void SetCenterOfRotation_Y(double coord_y);
     void SetCenterOfRotation_Z(double coord_z);
@@ -51,6 +40,13 @@ public:
     double GetCenterOfRotation_n_x() const;
     double GetCenterOfRotation_n_y() const;
     double GetCenterOfRotation_n_z() const;
-    unsigned int GetnDof();
+    unsigned int GetnDof() const;
+    double Get_m() const;
+    double Get_Kh() const;
+    double Get_Ka() const;
+    double Get_Ch() const;
+    double Get_Ca() const;
+    double Get_S() const;
+    double Get_If() const;
 
 };
