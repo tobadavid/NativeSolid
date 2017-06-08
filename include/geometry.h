@@ -87,7 +87,7 @@ public:
   unsigned long** vertex;  //vertex[iMarker][iPoint]
   unsigned long* nVertex;  //nVertex[iMarker]
   bool* markersMoving;
-  Point** node;         //node[iPöint] returns a pointeur to a Point object so e.g. node[iPoint]->PrintCoord();
+  Point** node;         //node[iPoint] returns a pointeur to a Point object so e.g. node[iPoint]->PrintCoord();
 };
 
 bool isInVec(std::vector<int> const& inputVector, int dummyInt);
