@@ -118,6 +118,7 @@ CVector & AlphaGenSolver::GetAccVar_n(){
 void AlphaGenSolver::Iterate(double &t0, double &tf, Structure *structure){
 
   double deltaT(tf-t0), epsilon(1e-6);
+  int nMaxIter(1000), nIter(0);
 
   gammaPrime = gamma/(deltaT*beta);
   betaPrime = (1-alpha_m)/(pow(deltaT,2)*beta*(1-alpha_f));
@@ -143,16 +144,19 @@ void AlphaGenSolver::Iterate(double &t0, double &tf, Structure *structure){
   CVector Deltaq(qddot.GetSize(), 0.0);
   CMatrix St(qddot.GetSize(), qddot.GetSize(), 0.0);
   ComputeResidual(structure,res);
-  while (res.norm() >= epsilon){
+  while (res.norm() >= epsilon && nIter < nMaxIter){
+    St.Reset();
     ComputeTangentOperator(structure,St);
     SolveSys(St,res);
     //*res -= ScalVecProd(double(2),res); //=deltaq
+    Deltaq.Reset();
     Deltaq += ScalVecProd(-1,res);
     q += Deltaq;
     qdot += ScalVecProd(gammaPrime,Deltaq);
     qddot += ScalVecProd(betaPrime,Deltaq);
-    Deltaq.Reset();
+    res.Reset();
     ComputeResidual(structure,res);
+    nIter++;
   }
   a += ScalVecProd((1-alpha_f)/(1-alpha_m),qddot);
 
@@ -240,8 +244,8 @@ void AlphaGenSolver::ComputeTangentOperator(Structure* structure, CMatrix &St){
 
   if(structure->GetnDof() == 1){
     MM.SetElm(1,1, structure->Get_m());
-    Kt.SetElm(1,1,-(structure->Get_Kh()));
-    Ct.SetElm(1,1,-(structure->Get_Ch()));
+    Kt.SetElm(1,1,(structure->Get_Kh()));
+    Ct.SetElm(1,1,(structure->Get_Ch()));
   }
   else if(structure->GetnDof() == 2){
     if(linear){
@@ -249,10 +253,10 @@ void AlphaGenSolver::ComputeTangentOperator(Structure* structure, CMatrix &St){
       MM.SetElm(1,2,(structure->Get_S()));
       MM.SetElm(2,1,(structure->Get_S()));
       MM.SetElm(2,2,structure->Get_If());
-      Ct.SetElm(1,1,-(structure->Get_Ch()));
-      Ct.SetElm(2,2,-(structure->Get_Ca()));
-      Kt.SetElm(1,1,-(structure->Get_Kh()));
-      Kt.SetElm(2,2,-(structure->Get_Ka()));
+      Ct.SetElm(1,1,(structure->Get_Ch()));
+      Ct.SetElm(2,2,(structure->Get_Ca()));
+      Kt.SetElm(1,1,(structure->Get_Kh()));
+      Kt.SetElm(2,2,(structure->Get_Ka()));
     }
     else{
       MM.SetElm(1,1, structure->Get_m());
