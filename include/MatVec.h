@@ -1,7 +1,7 @@
 #pragma once
 
-#include <cblas.h>
-#include <lapacke.h>
+#include "cblas.h"
+#include "lapacke.h"
 
 #define ROW_MAJ 0
 #define COL_MAJ 1
