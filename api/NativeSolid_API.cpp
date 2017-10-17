@@ -318,10 +318,25 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize){
     }
     else if(config->GetStructType() == "SPRING_HOR"){
       dPsi = 0.0;
+      psidot = 0.0;
       newCenter[0] = (integrator->GetSolver()->GetDisp())[0];
       newCenter[1] = Center[1];
       newCenter[2] = Center[2];
+      centerVel[0] = (integrator->GetSolver()->GetVel())[0];
+      centerVel[1] = 0.0;
+      centerVel[2] = 0.0;
     }
+    else if(config->GetStructType() == "SPRING_VER"){
+      dPsi = 0.0;
+      psidot = 0.0;
+      newCenter[0] = Center[0];
+      newCenter[1] = (integrator->GetSolver()->GetDisp())[0];
+      newCenter[2] = Center[2];
+      centerVel[0] = 0.0;
+      centerVel[1] = (integrator->GetSolver()->GetVel())[0];
+      centerVel[2] = 0.0;
+    }
+    else { }
 
     cosTheta = cos(dTheta);  cosPhi = cos(dPhi);  cosPsi = cos(dPsi);
     sinTheta = sin(dTheta);  sinPhi = sin(dPhi);  sinPsi = sin(dPsi);
