@@ -2,9 +2,9 @@ Installation of NativeSolid code
 
 Tools required :
 *CMAKE  (~sudo apt-get install cmake)
-*LAPACK/LAPACKE (liblapacke.so & lapacke.h)
-*CBLAS (libcblas.a & cblas.h)
-*C/C++ compiler (GCC)
+*LAPACK/LAPACKE (sudo apt-get install liblapacke-dev)
+*CBLAS (sudo apt-get install liblatlas-base-dev)
+*C/C++ compiler (sudo apt-get install build-essential)
 *MPI implementatin (OpenMPI)
 
 1. Go to the CMake folder and set the right paths for headers and libraries in the FindCBLAS and FindLAPACKE files
