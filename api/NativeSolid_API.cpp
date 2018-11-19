@@ -63,9 +63,7 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp):confFile(str){
     /*--- Initialize the temporal integrator ---*/
     cout << endl << "\n----------------------- Setting integration parameter ----------------------" << endl;
     integrator = new Integration(config, structure);
-    if(config->GetUnsteady() == "YES"){
-      integrator->SetInitialConditions(config, structure);
-    }
+    integrator->SetInitialConditions(config, structure);
 
     cout << endl << "\n----------------------- Setting FSI features ----------------------" << endl;
     q_uM1.Initialize(structure->GetnDof());
@@ -426,34 +424,15 @@ void NativeSolidSolver::setInitialDisplacements(){
   computeInterfacePosVel(true);
 }
 
-/*
+
 void NativeSolidSolver::staticComputation(){
 
-  int rank = MASTER_NODE;
-  int size = 1;
-
-#ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-#endif
-
-  integrator->StaticIteration(config,structure);
-
-  if(rank == MASTER_NODE){
-    if(structure->GetnDof() == 1){
-      cout << "Static Displacement : " << (*(integrator->GetDisp()))[0] << endl;
-    }
-    else if(structure->GetnDof() == 2){
-      cout << "Static Displacement 1 : " << (*(integrator->GetDisp()))[0] << endl;
-      cout << "Static Displacement 2 : " << (*(integrator->GetDisp()))[1] << endl;
-    }
-  }
+  integrator->StaticIteration(structure);
 
   //mapRigidBodyMotion(false,false);
   computeInterfacePosVel(false);
-
 }
-*/
+
 
 void NativeSolidSolver::writeSolution(double currentTime, double lastTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter){
 

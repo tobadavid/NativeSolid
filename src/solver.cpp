@@ -646,3 +646,53 @@ CVector RK4Solver::SetState_n(){
 
   return state;
 }
+
+/*CLASS STATIC SOLVER*/
+StaticSolver::StaticSolver(unsigned nDof, bool bool_linear) : Solver(nDof, bool_linear)
+{
+  _nDof = nDof;
+  KK.Initialize(_nDof, _nDof, 0.0);
+}
+
+StaticSolver::~StaticSolver()
+{
+  std::cout << "NativeSolid::~StaticSolver()" << std::endl;
+}
+
+void StaticSolver::SetInitialState(Config *config, Structure *structure){
+  // Reset displacement, velocity and acceleration
+  if (config->GetRestartSol() == "YES"){
+  }
+  else{
+    cout << "Setting basic initial conditions for Static" << endl;
+    q.Reset();
+    q_n.Reset();
+    cout << "Read initial configuration" << endl;
+    q[0] = config->GetInitialDisp();
+    if(_nDof == 2) q[1] = config->GetInitialAngle();
+    cout << "Initial plunging displacement : " << q[0] << endl;
+    cout << "Initial pitching displacement : " << q[1] << endl;
+    qdot.Reset();
+    qddot.Reset();
+  }
+  // Fill stiffness matrix
+  if(_nDof == 1)
+    KK.SetElm(1,1,structure->Get_Kh());
+  else if(_nDof == 2) {
+    KK.SetElm(1,1,structure->Get_Kh());
+    KK.SetElm(2,2,structure->Get_Ka());
+  }
+  else {
+    cerr << "Error in NativeSolid::StaticSolver: Number of degrees of freedom is out of range. nDof = " << _nDof << endl;
+    throw(-1);
+  }
+}
+
+void StaticSolver::Iterate(double &t0, double &tf, Structure* structure)
+{
+  // Solve KK*q = Loads
+  CVector RHS(_nDof, 0.);
+  RHS += Loads;
+  SolveSys(KK, RHS);
+  q = RHS;
+}

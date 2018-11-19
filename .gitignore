@@ -38,3 +38,6 @@ bin/*
 
 #Build directory
 build/*
+
+# Visual Studio Code files
+.vscode/

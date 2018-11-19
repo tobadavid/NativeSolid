@@ -40,7 +40,7 @@ public:
     //void mapRigidBodyMotion(bool predicition, bool initialize);
     void computeInterfacePosVel(bool initialize);
     void setInitialDisplacements();
-    //void staticComputation();
+    void staticComputation();
     void writeSolution(double currentTime, double lastTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter);
     void saveSolution();
     void updateSolution();
