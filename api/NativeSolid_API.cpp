@@ -1,5 +1,6 @@
 #include "NativeSolid_API.h"
 #include <cmath>
+#include <iomanip>
 
 using namespace std;
 
@@ -72,18 +73,36 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp):confFile(str){
     if(rank == MASTER_NODE){
       if(structure->GetnDof() == 1){
         if(config->GetUnsteady() == "YES"){
-          historyFile << "\"Time\"" << "\t" << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << endl;
+          historyFile << fixed
+                      << setw(10) << "Time"
+                      << setw(10) << "FSI iter"
+                      << setw(15) << "Displacement"
+                      << setw(15) << "Velocity"
+                      << setw(15) << "Acceleration" << endl;
         }
         else{
-          historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement\"" << endl;
+          historyFile << fixed
+                      << setw(10) << "FSI iter"
+                      << setw(15) << "Displacement" << endl;
         }
       }
       else if(structure->GetnDof() == 2){
         if(config->GetUnsteady() == "YES"){
-          historyFile << "\"Time\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << endl;
+          historyFile << fixed
+                      << setw(10) << "Time"
+                      << setw(10) << "FSI iter"
+                      << setw(15) << "Displacement 1"
+                      << setw(15) << "Displacement 2"
+                      << setw(15) << "Velocity 1"
+                      << setw(15) << "Velocity 2"
+                      << setw(15) << "Acceleration 1"
+                      << setw(15) << "Acceleration 2" << endl;
         }
         else{
-          historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 1\"" << endl;
+          historyFile << fixed
+                      << setw(10) << "FSI iter"
+                      << setw(15) << "Displacement 1"
+                      << setw(15) << "Displacement 2" << endl;
         }
       }
     }
@@ -520,6 +539,52 @@ void NativeSolidSolver::saveSolution(){
       }
       else{
         historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << endl;
+      }
+    }
+    }
+}
+
+void NativeSolidSolver::writeSolution(double time, int FSIter){
+
+    int rank = MASTER_NODE;
+
+  #ifdef HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  #endif
+
+    if(rank == MASTER_NODE){
+    if(structure->GetnDof() == 1){
+      if(config->GetUnsteady() == "YES"){
+        historyFile << fixed
+                    << setw(10) << time
+                    << setw(10) << FSIter
+                    << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                    << setw(15) << (integrator->GetSolver()->GetVel())[0]
+                    << setw(15) << (integrator->GetSolver()->GetAcc())[0] << endl;
+      }
+      else{
+        historyFile << fixed
+                    << setw(10) << FSIter
+                    << setw(15) << (integrator->GetSolver()->GetDisp())[0] << endl;
+      }
+    }
+    else if(structure->GetnDof() == 2){
+      if(config->GetUnsteady() == "YES"){
+        historyFile << fixed
+                    << setw(10) << time
+                    << setw(10) << FSIter
+                    << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                    << setw(15) << (integrator->GetSolver()->GetDisp())[1]
+                    << setw(15) << (integrator->GetSolver()->GetVel())[0]
+                    << setw(15) << (integrator->GetSolver()->GetVel())[1]
+                    << setw(15) << (integrator->GetSolver()->GetAcc())[0]
+                    << setw(15) << (integrator->GetSolver()->GetAcc())[1] << endl;
+      }
+      else{
+        historyFile << fixed
+                    << setw(10) << FSIter
+                    << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                    << setw(15) << (integrator->GetSolver()->GetDisp())[1] << endl;
       }
     }
     }

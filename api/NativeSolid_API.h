@@ -42,6 +42,7 @@ public:
     void setInitialDisplacements();
     void staticComputation();
     void writeSolution(double currentTime, double lastTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter);
+    void writeSolution(double time, int FSIter);
     void saveSolution();
     void updateSolution();
     //void updateGeometry();
