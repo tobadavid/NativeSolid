@@ -22,6 +22,7 @@ protected:
     Integration* integrator;
     Output* output;
     std::ofstream historyFile;
+    std::ofstream historyFile2;
     std::ofstream restartFile;
     CVector q_uM1; //The displacement at the previous FSI iteration
     double omega;
