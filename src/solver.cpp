@@ -691,6 +691,7 @@ void StaticSolver::SetInitialState(Config *config, Structure *structure){
 void StaticSolver::Iterate(double &t0, double &tf, Structure* structure)
 {
   // Solve KK*q = Loads
+  q_n = q; // save previous state (used to compute rotation in NativeSolidSolver::computeInterfacePosVel)
   CVector RHS(_nDof, 0.);
   RHS += Loads;
   SolveSys(KK, RHS);
