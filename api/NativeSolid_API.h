@@ -22,6 +22,7 @@ protected:
     Integration* integrator;
     Output* output;
     std::ofstream historyFile;
+    std::ofstream historyFile2;
     std::ofstream restartFile;
     CVector q_uM1; //The displacement at the previous FSI iteration
     double omega;
@@ -40,8 +41,9 @@ public:
     //void mapRigidBodyMotion(bool predicition, bool initialize);
     void computeInterfacePosVel(bool initialize);
     void setInitialDisplacements();
-    //void staticComputation();
+    void staticComputation();
     void writeSolution(double currentTime, double lastTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter);
+    void writeSolution(double time, int FSIter);
     void saveSolution();
     void updateSolution();
     //void updateGeometry();

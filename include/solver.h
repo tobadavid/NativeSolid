@@ -64,7 +64,6 @@ public:
 
 };
 
-
 class RK4Solver : public Solver {
 
 protected:
@@ -81,5 +80,20 @@ public:
     virtual void SetInitialState(Config* config, Structure* structure);
     CVector SetState();
     CVector SetState_n();
+
+};
+
+class StaticSolver : public Solver {
+
+protected:
+    unsigned int _nDof;
+    CMatrix KK;
+
+public:
+    StaticSolver(unsigned nDof, bool bool_linear);
+    ~StaticSolver();
+
+    virtual void Iterate(double &t0, double &tf, Structure* structure);
+    virtual void SetInitialState(Config* config, Structure* structure);
 
 };

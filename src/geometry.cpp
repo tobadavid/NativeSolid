@@ -165,7 +165,7 @@ Geometry::Geometry(Config* config){
   /*--- Open the mesh file and check ---*/
   meshFile.open(meshFileName.c_str(), ios::in);
   if (meshFile.fail()){
-    cout << "Enable to open the mesh file " << meshFileName << endl;
+    cout << "Unable to open the mesh file " << meshFileName << endl;
     exit(1);
   }
 
