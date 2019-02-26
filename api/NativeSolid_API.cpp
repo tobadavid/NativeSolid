@@ -1,5 +1,6 @@
 #include "NativeSolid_API.h"
 #include <cmath>
+#include <iomanip>
 
 using namespace std;
 
@@ -11,6 +12,7 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp):confFile(str){
   int rank = MASTER_NODE;
 
   historyFile.open("NativeHistory.dat", ios::out);
+  historyFile2.open("NativeHistoryFSI.dat", ios::out);
 
 /*--- MPI initialization, and buffer setting ---*/
 #ifdef HAVE_MPI
@@ -63,9 +65,7 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp):confFile(str){
     /*--- Initialize the temporal integrator ---*/
     cout << endl << "\n----------------------- Setting integration parameter ----------------------" << endl;
     integrator = new Integration(config, structure);
-    if(config->GetUnsteady() == "YES"){
-      integrator->SetInitialConditions(config, structure);
-    }
+    integrator->SetInitialConditions(config, structure);
 
     cout << endl << "\n----------------------- Setting FSI features ----------------------" << endl;
     q_uM1.Initialize(structure->GetnDof());
@@ -74,18 +74,60 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp):confFile(str){
     if(rank == MASTER_NODE){
       if(structure->GetnDof() == 1){
         if(config->GetUnsteady() == "YES"){
-          historyFile << "\"Time\"" << "\t" << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << endl;
+          historyFile << fixed
+                      << setw(10) << "Delta_t"
+                      << setw(10) << "FSI iter"
+                      << setw(15) << "Displacement"
+                      << setw(15) << "Velocity"
+                      << setw(15) << "Acceleration" << endl;
+          historyFile2 << fixed
+                       << setw(10) << "Time"
+                       << setw(10) << "FSI iter"
+                       << setw(15) << "Displacement"
+                       << setw(15) << "Velocity"
+                       << setw(15) << "Acceleration" << endl;
         }
         else{
-          historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement\"" << endl;
+          historyFile << fixed
+                      << setw(10) << "Delta_t"
+                      << setw(10) << "FSI iter"
+                      << setw(15) << "Displacement" << endl;
+          historyFile2 << fixed
+                       << setw(10) << "FSI iter"
+                       << setw(15) << "Displacement" << endl;
         }
       }
       else if(structure->GetnDof() == 2){
         if(config->GetUnsteady() == "YES"){
-          historyFile << "\"Time\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << endl;
+          historyFile << fixed
+                      << setw(10) << "Delta_t"
+                      << setw(10) << "FSI iter"
+                      << setw(15) << "Displacement 1"
+                      << setw(15) << "Displacement 2"
+                      << setw(15) << "Velocity 1"
+                      << setw(15) << "Velocity 2"
+                      << setw(15) << "Acceleration 1"
+                      << setw(15) << "Acceleration 2" << endl;
+          historyFile2 << fixed
+                       << setw(10) << "Time"
+                       << setw(10) << "FSI iter"
+                       << setw(15) << "Displacement 1"
+                       << setw(15) << "Displacement 2"
+                       << setw(15) << "Velocity 1"
+                       << setw(15) << "Velocity 2"
+                       << setw(15) << "Acceleration 1"
+                       << setw(15) << "Acceleration 2" << endl;
         }
         else{
-          historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 1\"" << endl;
+          historyFile << fixed
+                      << setw(10) << "Delta_t"
+                      << setw(10) << "FSI iter"
+                      << setw(15) << "Displacement 1"
+                      << setw(15) << "Displacement 2" << endl;
+          historyFile2  << fixed
+                        << setw(10) << "FSI iter"
+                        << setw(15) << "Displacement 1"
+                        << setw(15) << "Displacement 2" << endl;
         }
       }
     }
@@ -426,34 +468,15 @@ void NativeSolidSolver::setInitialDisplacements(){
   computeInterfacePosVel(true);
 }
 
-/*
+
 void NativeSolidSolver::staticComputation(){
 
-  int rank = MASTER_NODE;
-  int size = 1;
-
-#ifdef HAVE_MPI
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-#endif
-
-  integrator->StaticIteration(config,structure);
-
-  if(rank == MASTER_NODE){
-    if(structure->GetnDof() == 1){
-      cout << "Static Displacement : " << (*(integrator->GetDisp()))[0] << endl;
-    }
-    else if(structure->GetnDof() == 2){
-      cout << "Static Displacement 1 : " << (*(integrator->GetDisp()))[0] << endl;
-      cout << "Static Displacement 2 : " << (*(integrator->GetDisp()))[1] << endl;
-    }
-  }
+  integrator->StaticIteration(structure);
 
   //mapRigidBodyMotion(false,false);
   computeInterfacePosVel(false);
-
 }
-*/
+
 
 void NativeSolidSolver::writeSolution(double currentTime, double lastTime, double currentFSIIter, unsigned long ExtIter, unsigned long NbExtIter){
 
@@ -527,20 +550,88 @@ void NativeSolidSolver::saveSolution(){
   #endif
 
     if(rank == MASTER_NODE){
+      if(structure->GetnDof() == 1){
+        if(config->GetUnsteady() == "YES"){
+          historyFile << fixed
+                      << setw(10) << DeltaT
+                      << setw(10) << ExtIter
+                      << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                      << setw(15) << (integrator->GetSolver()->GetVel())[0]
+                      << setw(15) << (integrator->GetSolver()->GetAcc())[0] << endl;
+        }
+        else{
+          historyFile << fixed
+                      << setw(10) << DeltaT
+                      << setw(10) << ExtIter
+                      << setw(15) << (integrator->GetSolver()->GetDisp())[0] << endl;
+        }
+      }
+      else if(structure->GetnDof() == 2){
+        if(config->GetUnsteady() == "YES"){
+          historyFile << fixed
+                      << setw(10) << DeltaT
+                      << setw(10) << ExtIter
+                      << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                      << setw(15) << (integrator->GetSolver()->GetDisp())[1]
+                      << setw(15) << (integrator->GetSolver()->GetVel())[0]
+                      << setw(15) << (integrator->GetSolver()->GetVel())[1]
+                      << setw(15) << (integrator->GetSolver()->GetAcc())[0]
+                      << setw(15) << (integrator->GetSolver()->GetAcc())[1] << endl;
+        }
+        else{
+          historyFile << fixed
+                      << setw(10) << DeltaT
+                      << setw(10) << ExtIter
+                      << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                      << setw(15) << (integrator->GetSolver()->GetDisp())[1] << endl;
+        }
+      }
+    }
+
+    
+}
+
+void NativeSolidSolver::writeSolution(double time, int FSIter){
+
+    int rank = MASTER_NODE;
+
+  #ifdef HAVE_MPI
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  #endif
+
+    if(rank == MASTER_NODE){
     if(structure->GetnDof() == 1){
       if(config->GetUnsteady() == "YES"){
-        historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetAcc())[0] << endl;
+        historyFile2 << fixed
+                     << setw(10) << time
+                     << setw(10) << FSIter
+                     << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                     << setw(15) << (integrator->GetSolver()->GetVel())[0]
+                     << setw(15) << (integrator->GetSolver()->GetAcc())[0] << endl;
       }
       else{
-        historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << endl;
+        historyFile2 << fixed
+                     << setw(10) << FSIter
+                     << setw(15) << (integrator->GetSolver()->GetDisp())[0] << endl;
       }
     }
     else if(structure->GetnDof() == 2){
       if(config->GetUnsteady() == "YES"){
-        historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetVel())[1] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAcc())[1] << endl;
+        historyFile2 << fixed
+                     << setw(10) << time
+                     << setw(10) << FSIter
+                     << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                     << setw(15) << (integrator->GetSolver()->GetDisp())[1]
+                     << setw(15) << (integrator->GetSolver()->GetVel())[0]
+                     << setw(15) << (integrator->GetSolver()->GetVel())[1]
+                     << setw(15) << (integrator->GetSolver()->GetAcc())[0]
+                     << setw(15) << (integrator->GetSolver()->GetAcc())[1] << endl;
       }
       else{
-        historyFile << ExtIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << endl;
+        historyFile2 << fixed
+                     << setw(10) << FSIter
+                     << setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                     << setw(15) << (integrator->GetSolver()->GetDisp())[1] << endl;
       }
     }
     }
