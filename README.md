@@ -25,7 +25,7 @@ Required packages
 sudo apt-get install build-essential
 sudo apt-get install cmake
 sudo apt-get install liblapacke-dev
-sudo apt-get install liblatlas-base-dev
+sudo apt-get install libatlas-base-dev
 ```
 Optional packages (parallel build)
 ```
