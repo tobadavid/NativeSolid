@@ -25,7 +25,8 @@ Required packages
 sudo apt-get install build-essential
 sudo apt-get install cmake
 sudo apt-get install liblapacke-dev
-sudo apt-get install libatlas-base-dev
+sudo apt-get install libatlas-base-dev  # old debian / old ubuntu
+sudo apt-get install libopenblas-dev    # debian 10 / ubuntu 20.04
 ```
 Optional packages (parallel build)
 ```
