@@ -2,19 +2,16 @@
 #include <cmath>
 #include <iomanip>
 
-using namespace std;
-
 const int MASTER_NODE = 0;
 
-NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp) : confFile(str)
+NativeSolidSolver::NativeSolidSolver(std::string str, bool FSIComp) : confFile(str)
 {
-
     int rank = MASTER_NODE;
 
-    historyFile.open("NativeHistory.dat", ios::out);
-    historyFile2.open("NativeHistoryFSI.dat", ios::out);
+    historyFile.open("NativeHistory.dat", std::ios::out);
+    historyFile2.open("NativeHistoryFSI.dat", std::ios::out);
 
-/*--- MPI initialization, and buffer setting ---*/
+    // --- MPI initialization, and buffer setting ---
 #ifdef HAVE_MPI
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 #endif
@@ -22,11 +19,11 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp) : confFile(str)
     if (rank == MASTER_NODE)
     {
         if (FSIComp)
-            cout << endl
-                 << "***************************** Setting NativeSolid for FSI simulation *****************************" << endl;
+            std::cout << std::endl
+                 << "***************************** Setting NativeSolid for FSI simulation *****************************" << std::endl;
         else
-            cout << endl
-                 << "***************************** Setting NativeSolid for CSD simulation *****************************" << endl;
+            std::cout << std::endl
+                 << "***************************** Setting NativeSolid for CSD simulation *****************************" << std::endl;
     }
 
     config = NULL;
@@ -40,22 +37,22 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp) : confFile(str)
     output = new Output();
 
     /*--- Read CSD configuration file ---*/
-    cout << endl
-         << "\n----------------------- Reading Native configuration file ----------------------" << endl;
+    std::cout << std::endl
+         << "\n----------------------- Reading Native configuration file ----------------------" << std::endl;
     config->ReadConfig();
 
     /*--- Read a SU2 native mesh file ---*/
-    cout << endl
-         << "\n----------------------- Reading SU2 based mesh file ----------------------" << endl;
+    std::cout << std::endl
+         << "\n----------------------- Reading SU2 based mesh file ----------------------" << std::endl;
     geometry = new Geometry(config);
 
     /*--- Initialize structural container and create the structural model ---*/
-    cout << endl
-         << "\n----------------------- Creating the structural model ----------------------" << endl;
+    std::cout << std::endl
+         << "\n----------------------- Creating the structural model ----------------------" << std::endl;
     structure = new Structure(config);
 
-    cout << endl
-         << "\n----------------------- Creating the FSI interface ----------------------" << endl;
+    std::cout << std::endl
+         << "\n----------------------- Creating the FSI interface ----------------------" << std::endl;
     double *Coord;
     unsigned long iMarker(0), iPoint;
 
@@ -71,16 +68,16 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp) : confFile(str)
 
     varCoordNorm = 0.0;
 
-    cout << nSolidInterfaceVertex << " nodes on the moving interface have to be tracked." << endl;
+    std::cout << nSolidInterfaceVertex << " nodes on the moving interface have to be tracked." << std::endl;
 
     /*--- Initialize the temporal integrator ---*/
-    cout << endl
-         << "\n----------------------- Setting integration parameter ----------------------" << endl;
+    std::cout << std::endl
+         << "\n----------------------- Setting integration parameter ----------------------" << std::endl;
     integrator = new Integration(config, structure);
     integrator->SetInitialConditions(config, structure);
 
-    cout << endl
-         << "\n----------------------- Setting FSI features ----------------------" << endl;
+    std::cout << std::endl
+         << "\n----------------------- Setting FSI features ----------------------" << std::endl;
     q_uM1.Initialize(structure->GetnDof());
     q_uM1.Reset();
 
@@ -90,64 +87,64 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp) : confFile(str)
         {
             if (config->GetUnsteady() == "YES")
             {
-                historyFile << fixed
-                            << setw(10) << "Delta_t"
-                            << setw(10) << "FSI iter"
-                            << setw(15) << "Displacement"
-                            << setw(15) << "Velocity"
-                            << setw(15) << "Acceleration" << endl;
-                historyFile2 << fixed
-                             << setw(10) << "Time"
-                             << setw(10) << "FSI iter"
-                             << setw(15) << "Displacement"
-                             << setw(15) << "Velocity"
-                             << setw(15) << "Acceleration" << endl;
+                historyFile << std::fixed
+                            << std::setw(10) << "Delta_t"
+                            << std::setw(10) << "FSI iter"
+                            << std::setw(15) << "Displacement"
+                            << std::setw(15) << "Velocity"
+                            << std::setw(15) << "Acceleration" << std::endl;
+                historyFile2 << std::fixed
+                             << std::setw(10) << "Time"
+                             << std::setw(10) << "FSI iter"
+                             << std::setw(15) << "Displacement"
+                             << std::setw(15) << "Velocity"
+                             << std::setw(15) << "Acceleration" << std::endl;
             }
             else
             {
-                historyFile << fixed
-                            << setw(10) << "Delta_t"
-                            << setw(10) << "FSI iter"
-                            << setw(15) << "Displacement" << endl;
-                historyFile2 << fixed
-                             << setw(10) << "FSI iter"
-                             << setw(15) << "Displacement" << endl;
+                historyFile << std::fixed
+                            << std::setw(10) << "Delta_t"
+                            << std::setw(10) << "FSI iter"
+                            << std::setw(15) << "Displacement" << std::endl;
+                historyFile2 << std::fixed
+                             << std::setw(10) << "FSI iter"
+                             << std::setw(15) << "Displacement" << std::endl;
             }
         }
         else if (structure->GetnDof() == 2)
         {
             if (config->GetUnsteady() == "YES")
             {
-                historyFile << fixed
-                            << setw(10) << "Delta_t"
-                            << setw(10) << "FSI iter"
-                            << setw(15) << "Displacement 1"
-                            << setw(15) << "Displacement 2"
-                            << setw(15) << "Velocity 1"
-                            << setw(15) << "Velocity 2"
-                            << setw(15) << "Acceleration 1"
-                            << setw(15) << "Acceleration 2" << endl;
-                historyFile2 << fixed
-                             << setw(10) << "Time"
-                             << setw(10) << "FSI iter"
-                             << setw(15) << "Displacement 1"
-                             << setw(15) << "Displacement 2"
-                             << setw(15) << "Velocity 1"
-                             << setw(15) << "Velocity 2"
-                             << setw(15) << "Acceleration 1"
-                             << setw(15) << "Acceleration 2" << endl;
+                historyFile << std::fixed
+                            << std::setw(10) << "Delta_t"
+                            << std::setw(10) << "FSI iter"
+                            << std::setw(15) << "Displacement 1"
+                            << std::setw(15) << "Displacement 2"
+                            << std::setw(15) << "Velocity 1"
+                            << std::setw(15) << "Velocity 2"
+                            << std::setw(15) << "Acceleration 1"
+                            << std::setw(15) << "Acceleration 2" << std::endl;
+                historyFile2 << std::fixed
+                             << std::setw(10) << "Time"
+                             << std::setw(10) << "FSI iter"
+                             << std::setw(15) << "Displacement 1"
+                             << std::setw(15) << "Displacement 2"
+                             << std::setw(15) << "Velocity 1"
+                             << std::setw(15) << "Velocity 2"
+                             << std::setw(15) << "Acceleration 1"
+                             << std::setw(15) << "Acceleration 2" << std::endl;
             }
             else
             {
-                historyFile << fixed
-                            << setw(10) << "Delta_t"
-                            << setw(10) << "FSI iter"
-                            << setw(15) << "Displacement 1"
-                            << setw(15) << "Displacement 2" << endl;
-                historyFile2 << fixed
-                             << setw(10) << "FSI iter"
-                             << setw(15) << "Displacement 1"
-                             << setw(15) << "Displacement 2" << endl;
+                historyFile << std::fixed
+                            << std::setw(10) << "Delta_t"
+                            << std::setw(10) << "FSI iter"
+                            << std::setw(15) << "Displacement 1"
+                            << std::setw(15) << "Displacement 2" << std::endl;
+                historyFile2 << std::fixed
+                             << std::setw(10) << "FSI iter"
+                             << std::setw(15) << "Displacement 1"
+                             << std::setw(15) << "Displacement 2" << std::endl;
             }
         }
     }
@@ -155,11 +152,11 @@ NativeSolidSolver::NativeSolidSolver(string str, bool FSIComp) : confFile(str)
     if (rank == MASTER_NODE)
     {
         if (FSIComp)
-            cout << endl
-                 << "***************************** NativeSolid is set for FSI simulation *****************************" << endl;
+            std::cout << std::endl
+                 << "***************************** NativeSolid is set for FSI simulation *****************************" << std::endl;
         else
-            cout << endl
-                 << "***************************** NativeSolid is set for CSD simulation *****************************" << endl;
+            std::cout << std::endl
+                 << "***************************** NativeSolid is set for CSD simulation *****************************" << std::endl;
     }
 }
 
@@ -177,9 +174,9 @@ void NativeSolidSolver::exit()
     historyFile.close();
     if (rank == MASTER_NODE)
     {
-        cout << "Solid history file is closed." << endl;
-        cout << endl
-             << "***************************** Exit NativeSolid *****************************" << endl;
+        std::cout << "Solid history file is closed." << std::endl;
+        std::cout << std::endl
+             << "***************************** Exit NativeSolid *****************************" << std::endl;
     }
 
     if (config != NULL)
@@ -524,7 +521,7 @@ void NativeSolidSolver::writeSolution(double currentTime, double lastTime, doubl
 
     int rank = MASTER_NODE;
     double DeltaT;
-    string restartFileName;
+    std::string restartFileName;
     unsigned long DeltaIter = config->GetDeltaIterWrite();
 
     DeltaT = currentTime - lastTime;
@@ -539,26 +536,26 @@ void NativeSolidSolver::writeSolution(double currentTime, double lastTime, doubl
         {
             if (config->GetUnsteady() == "YES")
             {
-                // if(currentTime == config->GetStartTime()) historyFile << "\"Time\"" << "\t" << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << "\t" << "\"Acceleration variable\"" << endl;
-                historyFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << endl;
+                // if(currentTime == config->GetStartTime()) historyFile << "\"Time\"" << "\t" << "\"Displacement\"" << "\t" << "\"Velocity\"" << "\t" << "\"Acceleration\"" << "\t" << "\"Acceleration variable\"" << std::endl;
+                historyFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << std::endl;
             }
             else
             {
-                // if(currentFSIIter == config->GetStartTime()) historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement\"" << endl;
-                historyFile << currentFSIIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << endl;
+                // if(currentFSIIter == config->GetStartTime()) historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement\"" << std::endl;
+                historyFile << currentFSIIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << std::endl;
             }
         }
         else if (structure->GetnDof() == 2)
         {
             if (config->GetUnsteady() == "YES")
             {
-                // if(currentTime == config->GetStartTime()) historyFile << "\"Time\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << "\t" << "\"Acceleration variable 1\"" << "\t" << "\"Acceleration variable 2\"" << endl;
-                historyFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetVel())[1] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAcc())[1] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[1] << endl;
+                // if(currentTime == config->GetStartTime()) historyFile << "\"Time\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 2\"" << "\t" << "\"Velocity 1\""  << "\t" << "\"Velocity 2\"" << "\t" << "\"Acceleration 1\"" << "\t" << "\"Acceleration 2\"" << "\t" << "\"Acceleration variable 1\"" << "\t" << "\"Acceleration variable 2\"" << std::endl;
+                historyFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetVel())[1] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAcc())[1] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[1] << std::endl;
             }
             else
             {
-                // if(currentFSIIter == config->GetStartTime()) historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 1\"" << endl;
-                historyFile << currentFSIIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << endl;
+                // if(currentFSIIter == config->GetStartTime()) historyFile << "\"FSI Iteration\"" << "\t" << "\"Displacement 1\"" << "\t" << "\"Displacement 1\"" << std::endl;
+                historyFile << currentFSIIter << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << std::endl;
             }
         }
     }
@@ -568,7 +565,7 @@ void NativeSolidSolver::writeSolution(double currentTime, double lastTime, doubl
         if (ExtIter % DeltaIter == 0 || ExtIter == NbExtIter)
         {
             restartFileName = config->GetRestartFile();
-            restartFile.open(restartFileName.c_str(), ios::out);
+            restartFile.open(restartFileName.c_str(), std::ios::out);
             if (structure->GetnDof() == 1)
             {
                 restartFile << "\"Time\""
@@ -579,9 +576,9 @@ void NativeSolidSolver::writeSolution(double currentTime, double lastTime, doubl
                             << "\t"
                             << "\"Acceleration\""
                             << "\t"
-                            << "\"Acceleration variable\"" << endl;
-                restartFile << currentTime - DeltaT << "\t" << (integrator->GetSolver()->GetDisp_n())[0] << "\t" << (integrator->GetSolver()->GetVel_n())[0] << "\t" << (integrator->GetSolver()->GetAcc_n())[0] << "\t" << (integrator->GetSolver()->GetAccVar_n())[0] << endl;
-                restartFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << endl;
+                            << "\"Acceleration variable\"" << std::endl;
+                restartFile << currentTime - DeltaT << "\t" << (integrator->GetSolver()->GetDisp_n())[0] << "\t" << (integrator->GetSolver()->GetVel_n())[0] << "\t" << (integrator->GetSolver()->GetAcc_n())[0] << "\t" << (integrator->GetSolver()->GetAccVar_n())[0] << std::endl;
+                restartFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << std::endl;
             }
             else if (structure->GetnDof() == 2)
             {
@@ -601,9 +598,9 @@ void NativeSolidSolver::writeSolution(double currentTime, double lastTime, doubl
                             << "\t"
                             << "\"Acceleration variable 1\""
                             << "\t"
-                            << "\"Acceleration variable 2\"" << endl;
-                restartFile << currentTime - DeltaT << "\t" << (integrator->GetSolver()->GetDisp_n())[0] << "\t" << (integrator->GetSolver()->GetDisp_n())[1] << "\t" << (integrator->GetSolver()->GetVel_n())[0] << "\t" << (integrator->GetSolver()->GetVel_n())[1] << "\t" << (integrator->GetSolver()->GetAcc_n())[0] << "\t" << (integrator->GetSolver()->GetAcc_n())[1] << "\t" << (integrator->GetSolver()->GetAccVar_n())[0] << "\t" << (integrator->GetSolver()->GetAccVar_n())[1] << endl;
-                restartFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetVel())[1] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAcc())[1] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[1] << endl;
+                            << "\"Acceleration variable 2\"" << std::endl;
+                restartFile << currentTime - DeltaT << "\t" << (integrator->GetSolver()->GetDisp_n())[0] << "\t" << (integrator->GetSolver()->GetDisp_n())[1] << "\t" << (integrator->GetSolver()->GetVel_n())[0] << "\t" << (integrator->GetSolver()->GetVel_n())[1] << "\t" << (integrator->GetSolver()->GetAcc_n())[0] << "\t" << (integrator->GetSolver()->GetAcc_n())[1] << "\t" << (integrator->GetSolver()->GetAccVar_n())[0] << "\t" << (integrator->GetSolver()->GetAccVar_n())[1] << std::endl;
+                restartFile << currentTime << "\t" << (integrator->GetSolver()->GetDisp())[0] << "\t" << (integrator->GetSolver()->GetDisp())[1] << "\t" << (integrator->GetSolver()->GetVel())[0] << "\t" << (integrator->GetSolver()->GetVel())[1] << "\t" << (integrator->GetSolver()->GetAcc())[0] << "\t" << (integrator->GetSolver()->GetAcc())[1] << "\t" << (integrator->GetSolver()->GetAccVar())[0] << "\t" << (integrator->GetSolver()->GetAccVar())[1] << std::endl;
             }
             restartFile.close();
         }
@@ -615,7 +612,7 @@ void NativeSolidSolver::saveSolution()
 
     int rank = MASTER_NODE;
     double DeltaT;
-    // string restartFileName;
+    // std::string restartFileName;
     // unsigned long DeltaIter = config->GetDeltaIterWrite();
     unsigned long ExtIter = integrator->GetExtIter();
 
@@ -631,42 +628,42 @@ void NativeSolidSolver::saveSolution()
         {
             if (config->GetUnsteady() == "YES")
             {
-                historyFile << fixed
-                            << setw(10) << DeltaT
-                            << setw(10) << ExtIter
-                            << setw(15) << (integrator->GetSolver()->GetDisp())[0]
-                            << setw(15) << (integrator->GetSolver()->GetVel())[0]
-                            << setw(15) << (integrator->GetSolver()->GetAcc())[0] << endl;
+                historyFile << std::fixed
+                            << std::setw(10) << DeltaT
+                            << std::setw(10) << ExtIter
+                            << std::setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                            << std::setw(15) << (integrator->GetSolver()->GetVel())[0]
+                            << std::setw(15) << (integrator->GetSolver()->GetAcc())[0] << std::endl;
             }
             else
             {
-                historyFile << fixed
-                            << setw(10) << DeltaT
-                            << setw(10) << ExtIter
-                            << setw(15) << (integrator->GetSolver()->GetDisp())[0] << endl;
+                historyFile << std::fixed
+                            << std::setw(10) << DeltaT
+                            << std::setw(10) << ExtIter
+                            << std::setw(15) << (integrator->GetSolver()->GetDisp())[0] << std::endl;
             }
         }
         else if (structure->GetnDof() == 2)
         {
             if (config->GetUnsteady() == "YES")
             {
-                historyFile << fixed
-                            << setw(10) << DeltaT
-                            << setw(10) << ExtIter
-                            << setw(15) << (integrator->GetSolver()->GetDisp())[0]
-                            << setw(15) << (integrator->GetSolver()->GetDisp())[1]
-                            << setw(15) << (integrator->GetSolver()->GetVel())[0]
-                            << setw(15) << (integrator->GetSolver()->GetVel())[1]
-                            << setw(15) << (integrator->GetSolver()->GetAcc())[0]
-                            << setw(15) << (integrator->GetSolver()->GetAcc())[1] << endl;
+                historyFile << std::fixed
+                            << std::setw(10) << DeltaT
+                            << std::setw(10) << ExtIter
+                            << std::setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                            << std::setw(15) << (integrator->GetSolver()->GetDisp())[1]
+                            << std::setw(15) << (integrator->GetSolver()->GetVel())[0]
+                            << std::setw(15) << (integrator->GetSolver()->GetVel())[1]
+                            << std::setw(15) << (integrator->GetSolver()->GetAcc())[0]
+                            << std::setw(15) << (integrator->GetSolver()->GetAcc())[1] << std::endl;
             }
             else
             {
-                historyFile << fixed
-                            << setw(10) << DeltaT
-                            << setw(10) << ExtIter
-                            << setw(15) << (integrator->GetSolver()->GetDisp())[0]
-                            << setw(15) << (integrator->GetSolver()->GetDisp())[1] << endl;
+                historyFile << std::fixed
+                            << std::setw(10) << DeltaT
+                            << std::setw(10) << ExtIter
+                            << std::setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                            << std::setw(15) << (integrator->GetSolver()->GetDisp())[1] << std::endl;
             }
         }
     }
@@ -687,40 +684,40 @@ void NativeSolidSolver::writeSolution(double time, int FSIter)
         {
             if (config->GetUnsteady() == "YES")
             {
-                historyFile2 << fixed
-                             << setw(10) << time
-                             << setw(10) << FSIter
-                             << setw(15) << (integrator->GetSolver()->GetDisp())[0]
-                             << setw(15) << (integrator->GetSolver()->GetVel())[0]
-                             << setw(15) << (integrator->GetSolver()->GetAcc())[0] << endl;
+                historyFile2 << std::fixed
+                             << std::setw(10) << time
+                             << std::setw(10) << FSIter
+                             << std::setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                             << std::setw(15) << (integrator->GetSolver()->GetVel())[0]
+                             << std::setw(15) << (integrator->GetSolver()->GetAcc())[0] << std::endl;
             }
             else
             {
-                historyFile2 << fixed
-                             << setw(10) << FSIter
-                             << setw(15) << (integrator->GetSolver()->GetDisp())[0] << endl;
+                historyFile2 << std::fixed
+                             << std::setw(10) << FSIter
+                             << std::setw(15) << (integrator->GetSolver()->GetDisp())[0] << std::endl;
             }
         }
         else if (structure->GetnDof() == 2)
         {
             if (config->GetUnsteady() == "YES")
             {
-                historyFile2 << fixed
-                             << setw(10) << time
-                             << setw(10) << FSIter
-                             << setw(15) << (integrator->GetSolver()->GetDisp())[0]
-                             << setw(15) << (integrator->GetSolver()->GetDisp())[1]
-                             << setw(15) << (integrator->GetSolver()->GetVel())[0]
-                             << setw(15) << (integrator->GetSolver()->GetVel())[1]
-                             << setw(15) << (integrator->GetSolver()->GetAcc())[0]
-                             << setw(15) << (integrator->GetSolver()->GetAcc())[1] << endl;
+                historyFile2 << std::fixed
+                             << std::setw(10) << time
+                             << std::setw(10) << FSIter
+                             << std::setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                             << std::setw(15) << (integrator->GetSolver()->GetDisp())[1]
+                             << std::setw(15) << (integrator->GetSolver()->GetVel())[0]
+                             << std::setw(15) << (integrator->GetSolver()->GetVel())[1]
+                             << std::setw(15) << (integrator->GetSolver()->GetAcc())[0]
+                             << std::setw(15) << (integrator->GetSolver()->GetAcc())[1] << std::endl;
             }
             else
             {
-                historyFile2 << fixed
-                             << setw(10) << FSIter
-                             << setw(15) << (integrator->GetSolver()->GetDisp())[0]
-                             << setw(15) << (integrator->GetSolver()->GetDisp())[1] << endl;
+                historyFile2 << std::fixed
+                             << std::setw(10) << FSIter
+                             << std::setw(15) << (integrator->GetSolver()->GetDisp())[0]
+                             << std::setw(15) << (integrator->GetSolver()->GetDisp())[1] << std::endl;
             }
         }
     }
@@ -1018,7 +1015,7 @@ void NativeSolidSolver::setGeneralisedForce()
     }
     else
     {
-        cerr << "Wrong structural type for applying global fluild loads !" << endl;
+        std::cerr << "Wrong structural type for applying global fluild loads !" << std::endl;
         throw(-1);
     }
 }
@@ -1040,7 +1037,7 @@ void NativeSolidSolver::setGeneralisedForce(double Fx, double Fy)
     }
     else
     {
-        cerr << "Wrong structural type for applying global fluild loads !" << endl;
+        std::cerr << "Wrong structural type for applying global fluild loads !" << std::endl;
         throw(-1);
     }
 }
@@ -1078,7 +1075,7 @@ void NativeSolidSolver::setGeneralisedMoment()
     }
     else
     {
-        cerr << "Wrong structural type for applying global fluild loads !" << endl;
+        std::cerr << "Wrong structural type for applying global fluild loads !" << std::endl;
         throw(-1);
     }
 }
@@ -1098,7 +1095,7 @@ void NativeSolidSolver::setGeneralisedMoment(double M)
     }
     else
     {
-        cerr << "Wrong structural type for applying global fluild loads !" << endl;
+        std::cerr << "Wrong structural type for applying global fluild loads !" << std::endl;
         throw(-1);
     }
 }

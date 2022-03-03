@@ -1,16 +1,15 @@
 #pragma once
 
-#include <string>
-#include "../include/config.h"
-#include "../include/structure.h"
-#include "../include/integration.h"
-#include "../include/output.h"
-#include "../include/MatVec.h"
-#include "../include/geometry.h"
+#include "config.h"
+#include "structure.h"
+#include "integration.h"
+#include "MatVec.h"
+#include "geometry.h"
+#include "output.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
-
+#include <string>
 
 class NativeSolidSolver{
 

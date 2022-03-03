@@ -39,7 +39,6 @@ public:
 
 class AlphaGenSolver : public Solver
 {
-protected:
     double beta;
     double gamma;
     double alpha_m;
@@ -64,7 +63,6 @@ public:
 
 class RK4Solver : public Solver
 {
-protected:
     unsigned int size;
     double lastTime;
     double currentTime;
@@ -84,7 +82,6 @@ public:
 
 class StaticSolver : public Solver
 {
-protected:
     unsigned int _nDof;
     CMatrix KK;
 

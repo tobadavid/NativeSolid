@@ -8,7 +8,6 @@
 
 class CVector
 {
-protected:
     unsigned long nElm;
     double *vec_val;
 
@@ -35,8 +34,6 @@ public:
 
 class CMatrix
 {
-
-protected:
     unsigned long nEq;
     unsigned long nVar;
     CVector mat_val;

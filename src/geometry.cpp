@@ -7,8 +7,6 @@
 #include <stdlib.h>
 #include <algorithm>
 
-using namespace std;
-
 Point::Point()
 {
     Coord0 = new double[3];
@@ -95,7 +93,7 @@ double *Point::GetForce() const
 
 void Point::PrintCoord() const
 {
-    cout << Coord[0] << " ; " << Coord[1] << " ; " << Coord[2] << endl;
+    std::cout << Coord[0] << " ; " << Coord[1] << " ; " << Coord[2] << std::endl;
 }
 
 void Point::SetCoord0(double *newCoord)
@@ -157,9 +155,9 @@ void Point::UpdateVel()
 Geometry::Geometry(Config *config)
 {
 
-    string meshFileName, textLine, tampon;
-    ifstream meshFile;
-    string::size_type position;
+    std::string meshFileName, textLine, tampon;
+    std::ifstream meshFile;
+    std::string::size_type position;
     double Coord[3];
     double *TempCoord;
     unsigned long iMarker(0);
@@ -179,32 +177,32 @@ Geometry::Geometry(Config *config)
     meshFileName = config->GetMeshFile();
 
     /*--- Open the mesh file and check ---*/
-    meshFile.open(meshFileName.c_str(), ios::in);
+    meshFile.open(meshFileName.c_str(), std::ios::in);
     if (meshFile.fail())
     {
-        cout << "Unable to open the mesh file " << meshFileName << endl;
+        std::cout << "Unable to open the mesh file " << meshFileName << std::endl;
         exit(1);
     }
 
-    cout << "Mesh file " << meshFileName << " is open." << endl;
-    cout << "Constructing the mesh..." << endl;
+    std::cout << "Mesh file " << meshFileName << " is open." << std::endl;
+    std::cout << "Constructing the mesh..." << std::endl;
     while (getline(meshFile, textLine))
     {
 
         position = textLine.find("NDIME=", 0);
-        if (position != string::npos)
+        if (position != std::string::npos)
         {
             textLine.erase(0, 6);
             nDim = atoi(textLine.c_str());
-            cout << "Number of dimensions : " << nDim << endl;
+            std::cout << "Number of dimensions : " << nDim << std::endl;
         }
 
         position = textLine.find("NELEM=", 0);
-        if (position != string::npos)
+        if (position != std::string::npos)
         {
             textLine.erase(0, 6);
             nElem = atoi(textLine.c_str());
-            cout << "Number of elements : " << nElem << endl;
+            std::cout << "Number of elements : " << nElem << std::endl;
             for (int iElem = 0; iElem < nElem; iElem++)
             {
                 getline(meshFile, textLine);
@@ -212,39 +210,39 @@ Geometry::Geometry(Config *config)
         }
 
         position = textLine.find("NPOIN=", 0);
-        if (position != string::npos)
+        if (position != std::string::npos)
         {
             textLine.erase(0, 6);
             nPoint = atoi(textLine.c_str());
-            cout << "Number of points : " << nPoint << endl;
+            std::cout << "Number of points : " << nPoint << std::endl;
             node = new Point *[nPoint];
-            // cout << "JE VAIS REMPLIR" << endl;
+            // std::cout << "JE VAIS REMPLIR" << std::endl;
             for (iPoint = 0; iPoint < nPoint; iPoint++)
             {
                 getline(meshFile, textLine);
-                // if(iPoint == 1) cout << textLine << endl;
+                // if(iPoint == 1) std::cout << textLine << std::endl;
                 node[iPoint] = new Point();
-                istringstream point_line(textLine);
+                std::istringstream point_line(textLine);
                 point_line >> Coord[0];
-                // if(iPoint == 1) cout << Coord[0] << endl;
+                // if(iPoint == 1) std::cout << Coord[0] << std::endl;
                 point_line >> Coord[1];
-                // if(iPoint == 1) cout << Coord[1] << endl;
+                // if(iPoint == 1) std::cout << Coord[1] << std::endl;
                 if (nDim == 3)
                     point_line >> Coord[2];
                 node[iPoint]->SetCoord0(Coord);
                 node[iPoint]->SetCoord(Coord);
                 node[iPoint]->SetCoord_n(Coord);
                 TempCoord = node[iPoint]->GetCoord();
-                // cout << iPoint << endl;
+                // std::cout << iPoint << std::endl;
             }
         }
 
         position = textLine.find("NMARK=", 0);
-        if (position != string::npos)
+        if (position != std::string::npos)
         {
             textLine.erase(0, 6);
             nMarkers = atoi(textLine.c_str());
-            cout << "Number of markers : " << nMarkers << endl;
+            std::cout << "Number of markers : " << nMarkers << std::endl;
             vertex = new unsigned long *[nMarkers];
             nVertex = new unsigned long[nMarkers];
             markersMoving = new bool[nMarkers];
@@ -252,13 +250,13 @@ Geometry::Geometry(Config *config)
         }
 
         position = textLine.find("MARKER_TAG=", 0);
-        if (position != string::npos)
+        if (position != std::string::npos)
         {
             textLine.erase(0, 12);
-            cout << "Reading elements for marker : " << textLine << endl;
+            std::cout << "Reading elements for marker : " << textLine << std::endl;
             if (textLine == config->GetMovingMarker())
             {
-                cout << "Marker " << textLine << " is a moving marker." << endl;
+                std::cout << "Marker " << textLine << " is a moving marker." << std::endl;
                 markersMoving[iMarker] = true;
             }
             else
@@ -266,16 +264,16 @@ Geometry::Geometry(Config *config)
         }
 
         position = textLine.find("MARKER_ELEMS=", 0);
-        if (position != string::npos)
+        if (position != std::string::npos)
         {
             textLine.erase(0, 13);
             nElemMarker[iMarker] = atoi(textLine.c_str());
-            cout << "Number of elements on the marker : " << nElemMarker[iMarker] << endl;
-            vector<int> tempVertexMarker;
+            std::cout << "Number of elements on the marker : " << nElemMarker[iMarker] << std::endl;
+            std::vector<int> tempVertexMarker;
             for (int iElem = 0; iElem < nElemMarker[iMarker]; iElem++)
             {
                 getline(meshFile, textLine);
-                istringstream point_line(textLine);
+                std::istringstream point_line(textLine);
                 point_line >> elemType;
                 if (elemType == 3)
                 {
@@ -292,7 +290,7 @@ Geometry::Geometry(Config *config)
                 }
                 else
                 {
-                    cout << "Elem type " << elemType << " is not recognized !" << endl;
+                    std::cout << "Elem type " << elemType << " is not recognized !" << std::endl;
                     exit(1);
                 }
             }
@@ -306,7 +304,7 @@ Geometry::Geometry(Config *config)
     meshFile.close();
 
     /*for (int iVertex = 0; iVertex < nVertex[0]; iVertex++){
-      //cout << vertex[0][iVertex] << endl;
+      //cout << vertex[0][iVertex] << std::endl;
       iPoint = vertex[0][iVertex];
       node[iPoint]->PrintCoord();
     }*/
@@ -354,7 +352,7 @@ void Geometry::UpdateGeometry()
     }
 }
 
-bool isInVec(vector<int> const &inputVector, int dummyInt)
+bool isInVec(std::vector<int> const &inputVector, int dummyInt)
 {
     int i = 0;
     while (i < inputVector.size() && inputVector[i] != dummyInt)
@@ -362,7 +360,7 @@ bool isInVec(vector<int> const &inputVector, int dummyInt)
     return i < inputVector.size();
 }
 
-void vecCopy(vector<int> const &sourceVector, unsigned long *destinationTab)
+void vecCopy(std::vector<int> const &sourceVector, unsigned long *destinationTab)
 {
     for (int i = 0; i < sourceVector.size(); i++)
     {

@@ -5,7 +5,6 @@
 
 class Point
 {
-protected:
     double *Coord0;
     double *Coord;
     double *Coord_n;
@@ -35,7 +34,6 @@ public:
 
 class Geometry
 {
-protected:
     unsigned short nDim;
     unsigned long nElem, nPoint, nMarkers;
     unsigned long *nElemMarker;

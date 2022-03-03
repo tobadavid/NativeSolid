@@ -2,8 +2,6 @@
 #include <iostream>
 #include <cmath>
 
-using namespace std;
-
 CVector::CVector(void) : nElm(0)
 {
     vec_val = NULL;
@@ -15,8 +13,8 @@ CVector::CVector(const unsigned long &size, const double &val)
     if (size <= 0)
     {
         nElm = 0;
-        cerr << "CVector:CVector(const unsigned long &, const double): "
-             << "invalid input : size = " << size << endl;
+        std::cerr << "CVector:CVector(const unsigned long &, const double): "
+             << "invalid input : size = " << size << std::endl;
         throw(-1);
     }
     else
@@ -50,8 +48,8 @@ void CVector::Initialize(const unsigned long &size, const double &val)
         if (size <= 0)
         {
             nElm = 0;
-            cerr << "CVector::Initialize(const unsigned long &, const double &): "
-                 << "invalid number of element" << nElm << endl;
+            std::cerr << "CVector::Initialize(const unsigned long &, const double &): "
+                 << "invalid number of element" << nElm << std::endl;
             throw(-1);
         }
         else
@@ -76,8 +74,8 @@ unsigned long CVector::GetSize() const
 {
     if (nElm <= 0)
     {
-        cerr << "CVector::GetSize() const: "
-             << "invalid number of element" << nElm << endl;
+        std::cerr << "CVector::GetSize() const: "
+             << "invalid number of element" << nElm << std::endl;
         throw(-1);
     }
     return nElm;
@@ -90,10 +88,10 @@ double *CVector::GetVec() const
 
 void CVector::print() const
 {
-    cout << "**********" << endl;
+    std::cout << "**********" << std::endl;
     for (unsigned int i = 0; i < nElm; i++)
-        cout << vec_val[i] << endl;
-    cout << "**********" << endl;
+        std::cout << vec_val[i] << std::endl;
+    std::cout << "**********" << std::endl;
 }
 
 void CVector::SetAllValues(const double &val)
@@ -109,7 +107,7 @@ CVector &CVector::operator=(const CVector &u)
 
     if (nElm != u.nElm)
     {
-        cerr << "Sizes do not match for operator = : size1 = " << nElm << " & size2 = " << u.nElm << endl;
+        std::cerr << "Sizes do not match for operator = : size1 = " << nElm << " & size2 = " << u.nElm << std::endl;
         throw(-1);
     }
     else
@@ -125,8 +123,8 @@ CVector &CVector::operator+=(const CVector &u)
 {
     if (nElm != u.nElm)
     {
-        cerr << "CVector::operator+=(const CVector &) const: "
-             << "sizes do not match" << endl;
+        std::cerr << "CVector::operator+=(const CVector &) const: "
+             << "sizes do not match" << std::endl;
         throw(-1);
     }
 
@@ -140,8 +138,8 @@ CVector &CVector::operator-=(const CVector &u)
 {
     if (nElm != u.nElm)
     {
-        cerr << "CVector::operator-=const CVector &) const: "
-             << "sizes do not match" << endl;
+        std::cerr << "CVector::operator-=const CVector &) const: "
+             << "sizes do not match" << std::endl;
         throw(-1);
     }
 
@@ -176,8 +174,8 @@ double CVector::dotProd(const CVector &v) const
 {
     if (nElm != v.nElm)
     {
-        cerr << "CVector::dotProd(const CVector &, const CVector &): "
-             << "sizes do not math" << endl;
+        std::cerr << "CVector::dotProd(const CVector &, const CVector &): "
+             << "sizes do not math" << std::endl;
         throw(-1);
     }
 
@@ -195,8 +193,8 @@ double CVector::norm() const
 
     if (tempVal < 0)
     {
-        cerr << "CVector::norm(): "
-             << "computed dot product is negative: " << tempVal << endl;
+        std::cerr << "CVector::norm(): "
+             << "computed dot product is negative: " << tempVal << std::endl;
         throw(-1);
     }
 
@@ -261,9 +259,9 @@ CMatrix &CMatrix::operator=(const CMatrix &a)
 
     if (nEq != a.nEq || nVar != a.nVar)
     {
-        cerr << "Sizes do not match for operator = : nEq1 = " << nEq
+        std::cerr << "Sizes do not match for operator = : nEq1 = " << nEq
              << " & nEq2 = " << a.nEq << " ; nVar1 = " << nVar
-             << " & nVar2 = " << a.nVar << endl;
+             << " & nVar2 = " << a.nVar << std::endl;
         throw(-1);
     }
     else
@@ -277,8 +275,8 @@ CMatrix &CMatrix::operator+=(const CMatrix &a)
 {
     if (nEq != a.nEq || nVar != a.nVar)
     {
-        cerr << "CMatrix::operator+=(const CMatrix &): "
-             << "sizes do not match" << endl;
+        std::cerr << "CMatrix::operator+=(const CMatrix &): "
+             << "sizes do not match" << std::endl;
         throw(-1);
     }
     else
@@ -292,8 +290,8 @@ CMatrix &CMatrix::operator-=(const CMatrix &a)
 {
     if (nEq != a.nEq || nVar != a.nVar)
     {
-        cerr << "CMatrix::operator+=(const CMatrix &): "
-             << "sizes do not match" << endl;
+        std::cerr << "CMatrix::operator+=(const CMatrix &): "
+             << "sizes do not match" << std::endl;
         throw(-1);
     }
     else
@@ -439,7 +437,7 @@ void MatrixToVec(int order, double **matrix, double *vecteur, int Nrow, int Ncol
     }
     else
     {
-        cerr << "Wrong storage order" << endl;
+        std::cerr << "Wrong storage order" << std::endl;
         throw(-1);
     }
 }
@@ -461,7 +459,7 @@ void VecToMatrix(int order, double **matrix, double *vecteur,
     }
     else
     {
-        cerr << "Wrong storage order" << endl;
+        std::cerr << "Wrong storage order" << std::endl;
         throw(-1);
     }
 }

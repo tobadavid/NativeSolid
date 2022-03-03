@@ -5,7 +5,6 @@
 
 class Structure
 {
-protected:
     unsigned int nDof;
     double m;
     double Kh;

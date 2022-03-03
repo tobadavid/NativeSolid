@@ -7,8 +7,6 @@
 #include <fstream>
 #include <cmath>
 
-using namespace std;
-
 Integration::Integration(Config *config, Structure *structure)
 {
     solver = NULL;
@@ -88,35 +86,35 @@ void Integration::TemporalIteration(double &t0, double &tf, Structure *structure
     {
         if (structure->GetnDof() == 1)
         {
-            cout << fixed
-                 << setw(10) << "Time"
-                 << setw(15) << "Displacement"
-                 << setw(15) << "Velocity"
-                 << setw(15) << "Acceleration" << endl;
-            cout << fixed
-                 << setw(10) << currentTime
-                 << setw(15) << (solver->GetDisp())[0]
-                 << setw(15) << (solver->GetVel())[0]
-                 << setw(15) << (solver->GetAcc())[0] << endl;
+            std::cout << std::fixed
+                 << std::setw(10) << "Time"
+                 << std::setw(15) << "Displacement"
+                 << std::setw(15) << "Velocity"
+                 << std::setw(15) << "Acceleration" << std::endl;
+            std::cout << std::fixed
+                 << std::setw(10) << currentTime
+                 << std::setw(15) << (solver->GetDisp())[0]
+                 << std::setw(15) << (solver->GetVel())[0]
+                 << std::setw(15) << (solver->GetAcc())[0] << std::endl;
         }
         else if (structure->GetnDof() == 2)
         {
-            cout << fixed
-                 << setw(10) << "Time"
-                 << setw(15) << "Displacement1"
-                 << setw(15) << "Displacement2"
-                 << setw(15) << "Velocity1"
-                 << setw(15) << "Velocity2"
-                 << setw(15) << "Acceleration1"
-                 << setw(15) << "Acceleration2" << endl;
-            cout << fixed
-                 << setw(10) << currentTime
-                 << setw(15) << (solver->GetDisp())[0]
-                 << setw(15) << (solver->GetDisp())[1]
-                 << setw(15) << (solver->GetVel())[0]
-                 << setw(15) << (solver->GetVel())[1]
-                 << setw(15) << (solver->GetAcc())[0]
-                 << setw(15) << (solver->GetAcc())[1] << endl;
+            std::cout << std::fixed
+                 << std::setw(10) << "Time"
+                 << std::setw(15) << "Displacement1"
+                 << std::setw(15) << "Displacement2"
+                 << std::setw(15) << "Velocity1"
+                 << std::setw(15) << "Velocity2"
+                 << std::setw(15) << "Acceleration1"
+                 << std::setw(15) << "Acceleration2" << std::endl;
+            std::cout << std::fixed
+                 << std::setw(10) << currentTime
+                 << std::setw(15) << (solver->GetDisp())[0]
+                 << std::setw(15) << (solver->GetDisp())[1]
+                 << std::setw(15) << (solver->GetVel())[0]
+                 << std::setw(15) << (solver->GetVel())[1]
+                 << std::setw(15) << (solver->GetAcc())[0]
+                 << std::setw(15) << (solver->GetAcc())[1] << std::endl;
         }
     }
 }
@@ -138,23 +136,23 @@ void Integration::StaticIteration(Structure *structure)
     {
         if (structure->GetnDof() == 1)
         {
-            cout << fixed
-                 << setw(10) << "Time"
-                 << setw(15) << "Displacement" << endl;
-            cout << fixed
-                 << setw(10) << tf
-                 << setw(15) << (solver->GetDisp())[0] << endl;
+            std::cout << std::fixed
+                 << std::setw(10) << "Time"
+                 << std::setw(15) << "Displacement" << std::endl;
+            std::cout << std::fixed
+                 << std::setw(10) << tf
+                 << std::setw(15) << (solver->GetDisp())[0] << std::endl;
         }
         else if (structure->GetnDof() == 2)
         {
-            cout << fixed
-                 << setw(10) << "Time"
-                 << setw(15) << "Displacement1"
-                 << setw(15) << "Displacement2" << endl;
-            cout << fixed
-                 << setw(10) << tf
-                 << setw(15) << (solver->GetDisp())[0]
-                 << setw(15) << (solver->GetDisp())[1] << endl;
+            std::cout << std::fixed
+                 << std::setw(10) << "Time"
+                 << std::setw(15) << "Displacement1"
+                 << std::setw(15) << "Displacement2" << std::endl;
+            std::cout << std::fixed
+                 << std::setw(10) << tf
+                 << std::setw(15) << (solver->GetDisp())[0]
+                 << std::setw(15) << (solver->GetDisp())[1] << std::endl;
         }
     }
 }

@@ -5,8 +5,6 @@
 #include <fstream>
 #include <cmath>
 
-using namespace std;
-
 Solver::Solver(unsigned int nDof, bool bool_linear)
 {
     q.Initialize(nDof, 0.0);
@@ -113,12 +111,12 @@ AlphaGenSolver::AlphaGenSolver(unsigned int nDof, double val_rho,
     alpha_f = rho / (rho + 1);
     gamma = 0.5 + alpha_f - alpha_m;
     beta = 0.25 * pow((gamma + 0.5), 2);
-    cout << "Integration with the alpha-generalized algorithm :" << endl;
-    cout << "rho : " << rho << endl;
-    cout << "alpha_m : " << alpha_m << endl;
-    cout << "alpha_f : " << alpha_f << endl;
-    cout << "gamma : " << gamma << endl;
-    cout << "beta : " << beta << endl;
+    std::cout << "Integration with the alpha-generalized algorithm :" << std::endl;
+    std::cout << "rho : " << rho << std::endl;
+    std::cout << "alpha_m : " << alpha_m << std::endl;
+    std::cout << "alpha_f : " << alpha_f << std::endl;
+    std::cout << "gamma : " << gamma << std::endl;
+    std::cout << "beta : " << beta << std::endl;
 }
 
 AlphaGenSolver::~AlphaGenSolver() 
@@ -324,13 +322,13 @@ void AlphaGenSolver::SetInitialState(Config *config, Structure *structure)
 
     if (config->GetRestartSol() == "YES")
     {
-        string InputFileName = config->GetRestartFile();
-        string text_line;
-        string token, tempString;
+        std::string InputFileName = config->GetRestartFile();
+        std::string text_line;
+        std::string token, tempString;
         size_t pos;
-        string delimiter = "\t";
-        ifstream InputFile;
-        InputFile.open(InputFileName.c_str(), ios::in);
+        std::string delimiter = "\t";
+        std::ifstream InputFile;
+        InputFile.open(InputFileName.c_str(), std::ios::in);
         double buffer[(4 * structure->GetnDof()) + 1];
         int kk = 0;
         int jj;
@@ -340,7 +338,7 @@ void AlphaGenSolver::SetInitialState(Config *config, Structure *structure)
             jj = 0;
             if (kk == 1)
             {
-                while ((pos = tempString.find(delimiter)) != string::npos)
+                while ((pos = tempString.find(delimiter)) != std::string::npos)
                 {
                     token = tempString.substr(0, pos);
                     tempString.erase(0, pos + delimiter.length());
@@ -374,7 +372,7 @@ void AlphaGenSolver::SetInitialState(Config *config, Structure *structure)
             }
             else if (kk == 2)
             {
-                while ((pos = tempString.find(delimiter)) != string::npos)
+                while ((pos = tempString.find(delimiter)) != std::string::npos)
                 {
                     token = tempString.substr(0, pos);
                     tempString.erase(0, pos + delimiter.length());
@@ -412,15 +410,15 @@ void AlphaGenSolver::SetInitialState(Config *config, Structure *structure)
     }
     else
     {
-        cout << "Setting basic initial conditions for alpha-Gen" << endl;
+        std::cout << "Setting basic initial conditions for alpha-Gen" << std::endl;
         q.Reset();
         q_n.Reset();
-        cout << "Read initial configuration" << endl;
+        std::cout << "Read initial configuration" << std::endl;
         q[0] = config->GetInitialDisp();
         if (structure->GetnDof() == 2)
             q[1] = config->GetInitialAngle();
-        cout << "Initial plunging displacement : " << q[0] << endl;
-        cout << "Initial pitching displacement : " << q[1] << endl;
+        std::cout << "Initial plunging displacement : " << q[0] << std::endl;
+        std::cout << "Initial pitching displacement : " << q[1] << std::endl;
 
         qdot.Reset();
         qddot.Reset();
@@ -615,15 +613,15 @@ void RK4Solver::SetInitialState(Config *config, Structure *structure)
     }
     else
     {
-        cout << "Setting basic initial conditions for RK4" << endl;
+        std::cout << "Setting basic initial conditions for RK4" << std::endl;
         q.Reset();
         q_n.Reset();
-        cout << "Read initial configuration" << endl;
+        std::cout << "Read initial configuration" << std::endl;
         q[0] = config->GetInitialDisp();
         if (structure->GetnDof() == 2)
             q[1] = config->GetInitialAngle();
-        cout << "Initial plunging displacement : " << q[0] << endl;
-        cout << "Initial pitching displacement : " << q[1] << endl;
+        std::cout << "Initial plunging displacement : " << q[0] << std::endl;
+        std::cout << "Initial pitching displacement : " << q[1] << std::endl;
         qdot.Reset();
 
         lastTime = 0.0;
@@ -714,15 +712,15 @@ void StaticSolver::SetInitialState(Config *config, Structure *structure)
     }
     else
     {
-        cout << "Setting basic initial conditions for Static" << endl;
+        std::cout << "Setting basic initial conditions for Static" << std::endl;
         q.Reset();
         q_n.Reset();
-        cout << "Read initial configuration" << endl;
+        std::cout << "Read initial configuration" << std::endl;
         q[0] = config->GetInitialDisp();
         if (_nDof == 2)
             q[1] = config->GetInitialAngle();
-        cout << "Initial plunging displacement : " << q[0] << endl;
-        cout << "Initial pitching displacement : " << q[1] << endl;
+        std::cout << "Initial plunging displacement : " << q[0] << std::endl;
+        std::cout << "Initial pitching displacement : " << q[1] << std::endl;
         qdot.Reset();
         qddot.Reset();
     }
@@ -736,7 +734,7 @@ void StaticSolver::SetInitialState(Config *config, Structure *structure)
     }
     else
     {
-        cerr << "Error in NativeSolid::StaticSolver: Number of degrees of freedom is out of range. nDof = " << _nDof << endl;
+        std::cerr << "Error in NativeSolid::StaticSolver: Number of degrees of freedom is out of range. nDof = " << _nDof << std::endl;
         throw(-1);
     }
 }

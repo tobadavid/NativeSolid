@@ -6,7 +6,6 @@ ADD_LIBRARY(Native SHARED
     ../include/geometry.h 
     ../include/integration.h 
     ../include/MatVec.h 
-    ../include/output.h 
     ../include/structure.h 
     ../include/solver.h 
     config.cpp 

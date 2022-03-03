@@ -5,8 +5,6 @@
 #include <fstream>
 #include <sstream>
 
-using namespace std;
-
 Structure::Structure(Config *config)
 {
     centerOfRotation[0] = 0.0;
@@ -33,11 +31,11 @@ Structure::Structure(Config *config)
         S = 0;
         ICG = 0;
         If = 0;
-        cout << "Setting mass-spring-damper system" << endl;
-        cout << "Number of DOF : " << nDof << endl;
-        cout << "Plunging mass : " << m << " [kg]" << endl;
-        cout << "Plunging damping : " << Ch << " [Ns/m]" << endl;
-        cout << "Plunging stiffness : " << Kh << " [N/m]" << endl;
+        std::cout << "Setting mass-spring-damper system" << std::endl;
+        std::cout << "Number of DOF : " << nDof << std::endl;
+        std::cout << "Plunging mass : " << m << " [kg]" << std::endl;
+        std::cout << "Plunging damping : " << Ch << " [Ns/m]" << std::endl;
+        std::cout << "Plunging stiffness : " << Kh << " [N/m]" << std::endl;
     }
     else if (config->GetStructType() == "AIRFOIL")
     {
@@ -56,18 +54,18 @@ Structure::Structure(Config *config)
         If = config->GetInertiaFlexural();
         // S = m*(c/2.0-xf);
         // Ia = 1.0/3.0*m*(c*c-3*c*xf+3*xf*xf);
-        cout << "Setting pitching-plunging airfoil system" << endl;
-        cout << "Number of DOF : " << nDof << endl;
-        cout << "Airfoil mass : " << m << " [kg]" << endl;
-        cout << "Airfoil cord : " << c << " [m]" << endl;
-        cout << "Position of the flexural axis : " << xf << " [m]" << endl;
-        cout << "Inertia around the flexural axis : " << If << " [kg m²]" << endl;
-        cout << "Plunging damping : " << Ch << " [Ns/m]" << endl;
-        cout << "Plunging stiffness : " << Kh << " [N/m]" << endl;
-        cout << "Pitching damping : " << Ca << " [Ns]" << endl;
-        cout << "Pitching stiffness : " << Ka << " [N]" << endl;
-        cout << "Position of the center of gravity : " << xCG << " [m]" << endl;
-        cout << "Static unbalance : " << S << " [kg m]" << endl;
+        std::cout << "Setting pitching-plunging airfoil system" << std::endl;
+        std::cout << "Number of DOF : " << nDof << std::endl;
+        std::cout << "Airfoil mass : " << m << " [kg]" << std::endl;
+        std::cout << "Airfoil cord : " << c << " [m]" << std::endl;
+        std::cout << "Position of the flexural axis : " << xf << " [m]" << std::endl;
+        std::cout << "Inertia around the flexural axis : " << If << " [kg m²]" << std::endl;
+        std::cout << "Plunging damping : " << Ch << " [Ns/m]" << std::endl;
+        std::cout << "Plunging stiffness : " << Kh << " [N/m]" << std::endl;
+        std::cout << "Pitching damping : " << Ca << " [Ns]" << std::endl;
+        std::cout << "Pitching stiffness : " << Ka << " [N]" << std::endl;
+        std::cout << "Position of the center of gravity : " << xCG << " [m]" << std::endl;
+        std::cout << "Static unbalance : " << S << " [kg m]" << std::endl;
 
         centerOfRotation[0] = xf;
         centerOfRotation_n[0] = xf;
@@ -75,7 +73,7 @@ Structure::Structure(Config *config)
     else
     {
         nDof = 0;
-        cerr << "Invalid structural type. Available choices are : SPRIN_HOR, SPRING_VER and AIRFOIL." << endl;
+        std::cerr << "Invalid structural type. Available choices are : SPRIN_HOR, SPRING_VER and AIRFOIL." << std::endl;
         throw(-1);
     }
 }

@@ -5,9 +5,7 @@
 #include <stdlib.h>
 #include <algorithm>
 
-using namespace std;
-
-Config::Config(string filename) : ConfigFileName(filename)
+Config::Config(std::string filename) : ConfigFileName(filename)
 {
 }
 
@@ -22,14 +20,14 @@ Config *Config::GetAddress()
 
 void Config::ReadConfig()
 {
-    string delimiter = "=";
+    std::string delimiter = "=";
     size_t pos;
-    string text_line, option;
-    ifstream InputFile;
-    InputFile.open(ConfigFileName.c_str(), ios::in);
+    std::string text_line, option;
+    std::ifstream InputFile;
+    InputFile.open(ConfigFileName.c_str(), std::ios::in);
     if (InputFile.fail())
     {
-        cerr << "Invalid configuration file name : " << ConfigFileName << endl;
+        std::cerr << "Invalid configuration file name : " << ConfigFileName << std::endl;
         throw(-1);
     }
     char caract;
@@ -99,27 +97,27 @@ void Config::ReadConfig()
             else if (option == "RHO")
                 RHO = atof(text_line.c_str());
             else
-                cout << "The option " + option + " is not recognized !" << endl;
+                std::cout << "The option " + option + " is not recognized !" << std::endl;
         }
     }
     InputFile.close();
 
     if (CSD_SOLVER == "NATIVE")
-        cout << "The Native solver has been chosen" << endl;
+        std::cout << "The Native solver has been chosen" << std::endl;
     else
-        cout << "Cannot run the solver with other value than NATIVE for CSD_SOLVER option !" << endl;
+        std::cout << "Cannot run the solver with other value than NATIVE for CSD_SOLVER option !" << std::endl;
 
     if (UNSTEADY_SIMULATION == "YES")
-        cout << "Dynamic structure computation" << endl;
+        std::cout << "Dynamic structure computation" << std::endl;
     else
-        cout << "Static structure computation" << endl;
+        std::cout << "Static structure computation" << std::endl;
 
     if (STRUCT_TYPE == "SPRING_HOR" || STRUCT_TYPE == "SPRING_VER")
-        cout << "Structural model is a plunging spring" << endl;
+        std::cout << "Structural model is a plunging spring" << std::endl;
     else if (STRUCT_TYPE == "AIRFOIL")
-        cout << "Structural model is a pitching plunging airfoil" << endl;
+        std::cout << "Structural model is a pitching plunging airfoil" << std::endl;
     else
-        cout << "The specified structural model is not recognized or implemented yet !" << endl;
+        std::cout << "The specified structural model is not recognized or implemented yet !" << std::endl;
 }
 
 std::string Config::GetMeshFile()

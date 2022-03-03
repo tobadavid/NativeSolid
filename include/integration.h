@@ -8,12 +8,10 @@
 
 class Integration
 {
-protected:
     double totTime;
     double deltaT;
     unsigned long ExtIter;
     std::string algo;
-
     Solver *solver;
 
 public:
