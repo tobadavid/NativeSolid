@@ -1,4 +1,4 @@
-# NativeSolid
+# NativeSolid / RBM
 Native solid solver for FSI
 
 ## Features
@@ -18,6 +18,7 @@ Compute static or dynamic displacements for several 2D configurations.
   - Stiffness term only
 
 ## Compilation (linux -gcc)
+
 Installation of NativeSolid code
 
 Required packages
@@ -25,8 +26,7 @@ Required packages
 sudo apt-get install build-essential
 sudo apt-get install cmake
 sudo apt-get install liblapacke-dev
-sudo apt-get install libatlas-base-dev  # old debian / old ubuntu
-sudo apt-get install libopenblas-dev    # debian 10 / ubuntu 20.04
+sudo apt-get install libopenblas-dev
 ```
 Optional packages (parallel build)
 ```
@@ -36,7 +36,7 @@ Compilation (you might need to set paths for headers and libraries in the FindCB
 ```
 mkdir build && cd build
 cmake ..
-make -j4
+make -j 4
 ```
 Environment variables
 ```
@@ -44,4 +44,4 @@ gedit /home/"username"/.bashrc
 export NATIVE_RUN="INSTALL_PATH/NativeSolid/bin"
 export PATH=$PATH:$NATIVE_RUN
 export PYTHONPATH=$PYTHONPATH:$NATIVE_RUN
-	
+```	

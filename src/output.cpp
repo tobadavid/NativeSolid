@@ -1,11 +1,17 @@
-#include "../include/output.h"
+#include "output.h"
 #include <iostream>
 
 using namespace std;
 
-Output::Output(){}
+Output::Output() 
+{
+    
+}
 
-Output::~Output(){}
+Output::~Output() 
+{
+
+}
 
 /*
 void Output::WriteHistory(Integration* solver, Structure* structure, ofstream* outputfile, const double & time){

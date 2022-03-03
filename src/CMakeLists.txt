@@ -30,4 +30,6 @@ TARGET_LINK_LIBRARIES(TestCVector ${LAPACKE_LIBRARIES}
                                   ${CBLAS_LIBRARIES} 
                                   ${BLAS_LIBRARIES})
 
-
+ADD_TEST(NAME TestCVector COMMAND ${EXECUTABLE_OUTPUT_PATH}/TestCVector
+         WORKING_DIRECTORY ${PROJECT_BINARY_DIR})
+                          

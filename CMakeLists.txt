@@ -60,6 +60,8 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/include
                     ${PYTHON_INCLUDE_PATH}
 )
 
+ENABLE_TESTING()
+        
 # -- Sub directories --
 ADD_SUBDIRECTORY( src )
 ADD_SUBDIRECTORY( _api )
