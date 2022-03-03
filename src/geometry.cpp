@@ -176,7 +176,7 @@ Geometry::Geometry(Config *config)
 
     meshFileName = config->GetMeshFile();
 
-    /*--- Open the mesh file and check ---*/
+    //--- Open the mesh file and check ---
     meshFile.open(meshFileName.c_str(), std::ios::in);
     if (meshFile.fail())
     {
@@ -303,11 +303,12 @@ Geometry::Geometry(Config *config)
 
     meshFile.close();
 
-    /*for (int iVertex = 0; iVertex < nVertex[0]; iVertex++){
-      //cout << vertex[0][iVertex] << std::endl;
-      iPoint = vertex[0][iVertex];
-      node[iPoint]->PrintCoord();
-    }*/
+    // for (int iVertex = 0; iVertex < nVertex[0]; iVertex++)
+    // {
+    //     // cout << vertex[0][iVertex] << std::endl;
+    //     iPoint = vertex[0][iVertex];
+    //     node[iPoint]->PrintCoord();
+    // }
 }
 
 Geometry::~Geometry()

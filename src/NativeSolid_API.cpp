@@ -20,10 +20,10 @@ NativeSolidSolver::NativeSolidSolver(std::string str, bool FSIComp) : confFile(s
     {
         if (FSIComp)
             std::cout << std::endl
-                 << "***************************** Setting NativeSolid for FSI simulation *****************************" << std::endl;
+                      << "***************************** Setting NativeSolid for FSI simulation *****************************" << std::endl;
         else
             std::cout << std::endl
-                 << "***************************** Setting NativeSolid for CSD simulation *****************************" << std::endl;
+                      << "***************************** Setting NativeSolid for CSD simulation *****************************" << std::endl;
     }
 
     config = NULL;
@@ -32,27 +32,27 @@ NativeSolidSolver::NativeSolidSolver(std::string str, bool FSIComp) : confFile(s
     structure = NULL;
     integrator = NULL;
 
-    /*--- Initialize the main containers ---*/
+    //--- Initialize the main containers ---
     config = new Config(confFile);
     output = new Output();
 
-    /*--- Read CSD configuration file ---*/
+    //--- Read CSD configuration file ---
     std::cout << std::endl
-         << "\n----------------------- Reading Native configuration file ----------------------" << std::endl;
+              << "\n----------------------- Reading Native configuration file ----------------------" << std::endl;
     config->ReadConfig();
 
-    /*--- Read a SU2 native mesh file ---*/
+    //--- Read a SU2 native mesh file ---
     std::cout << std::endl
-         << "\n----------------------- Reading SU2 based mesh file ----------------------" << std::endl;
+              << "\n----------------------- Reading SU2 based mesh file ----------------------" << std::endl;
     geometry = new Geometry(config);
 
-    /*--- Initialize structural container and create the structural model ---*/
+    //--- Initialize structural container and create the structural model ---
     std::cout << std::endl
-         << "\n----------------------- Creating the structural model ----------------------" << std::endl;
+              << "\n----------------------- Creating the structural model ----------------------" << std::endl;
     structure = new Structure(config);
 
     std::cout << std::endl
-         << "\n----------------------- Creating the FSI interface ----------------------" << std::endl;
+              << "\n----------------------- Creating the FSI interface ----------------------" << std::endl;
     double *Coord;
     unsigned long iMarker(0), iPoint;
 
@@ -70,14 +70,14 @@ NativeSolidSolver::NativeSolidSolver(std::string str, bool FSIComp) : confFile(s
 
     std::cout << nSolidInterfaceVertex << " nodes on the moving interface have to be tracked." << std::endl;
 
-    /*--- Initialize the temporal integrator ---*/
+    //--- Initialize the temporal integrator ---
     std::cout << std::endl
-         << "\n----------------------- Setting integration parameter ----------------------" << std::endl;
+              << "\n----------------------- Setting integration parameter ----------------------" << std::endl;
     integrator = new Integration(config, structure);
     integrator->SetInitialConditions(config, structure);
 
     std::cout << std::endl
-         << "\n----------------------- Setting FSI features ----------------------" << std::endl;
+              << "\n----------------------- Setting FSI features ----------------------" << std::endl;
     q_uM1.Initialize(structure->GetnDof());
     q_uM1.Reset();
 
@@ -153,10 +153,10 @@ NativeSolidSolver::NativeSolidSolver(std::string str, bool FSIComp) : confFile(s
     {
         if (FSIComp)
             std::cout << std::endl
-                 << "***************************** NativeSolid is set for FSI simulation *****************************" << std::endl;
+                      << "***************************** NativeSolid is set for FSI simulation *****************************" << std::endl;
         else
             std::cout << std::endl
-                 << "***************************** NativeSolid is set for CSD simulation *****************************" << std::endl;
+                      << "***************************** NativeSolid is set for CSD simulation *****************************" << std::endl;
     }
 }
 
@@ -176,7 +176,7 @@ void NativeSolidSolver::exit()
     {
         std::cout << "Solid history file is closed." << std::endl;
         std::cout << std::endl
-             << "***************************** Exit NativeSolid *****************************" << std::endl;
+                  << "***************************** Exit NativeSolid *****************************" << std::endl;
     }
 
     if (config != NULL)
@@ -365,12 +365,12 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize)
     unsigned long iPoint;
     double varCoordNorm2(0.0);
 
-    /*--- Get the current center of rotation (can vary at each iteration) ---*/
+    //--- Get the current center of rotation (can vary at each iteration) ---
     Center[0] = structure->GetCenterOfRotation_x();
     Center[1] = structure->GetCenterOfRotation_y();
     Center[2] = structure->GetCenterOfRotation_z();
 
-    /*--- Get the center of rotation from previous time step ---*/
+    //--- Get the center of rotation from previous time step ---
     Center_n[0] = structure->GetCenterOfRotation_n_x();
     Center_n[1] = structure->GetCenterOfRotation_n_y();
     Center_n[2] = structure->GetCenterOfRotation_n_z();
@@ -421,8 +421,8 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize)
     sinPhi = sin(dPhi);
     sinPsi = sin(dPsi);
 
-    /*--- Compute the rotation matrix. The implicit
-    ordering is rotation about the x-axis, y-axis, then z-axis. ---*/
+    //--- Compute the rotation matrix. The implicit
+    //    ordering is rotation about the x-axis, y-axis, then z-axis. ---
 
     rotMatrix[0][0] = cosPhi * cosPsi;
     rotMatrix[1][0] = cosPhi * sinPsi;
@@ -479,11 +479,11 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize)
 
                 varCoordNorm2 += varCoord[0] * varCoord[0] + varCoord[1] * varCoord[1] + varCoord[2] * varCoord[2];
 
-                /*--- Apply change of coordinates to the node on the moving interface ---*/
+                //--- Apply change of coordinates to the node on the moving interface ---
                 geometry->node[iPoint]->SetCoord(newCoord);
                 geometry->node[iPoint]->SetVel(newVel);
 
-                /*--- At initialisation, propagate the initial position of the inteface in the past ---*/
+                //--- At initialisation, propagate the initial position of the inteface in the past ---
                 if (initialize)
                 {
                     geometry->node[iPoint]->SetCoord_n(newCoord);
@@ -495,7 +495,7 @@ void NativeSolidSolver::computeInterfacePosVel(bool initialize)
 
     varCoordNorm = sqrt(varCoordNorm2);
 
-    /*--- Update the position of the center of rotation ---*/
+    //--- Update the position of the center of rotation ---
     structure->SetCenterOfRotation_X(newCenter[0]);
     structure->SetCenterOfRotation_Y(newCenter[1]);
     structure->SetCenterOfRotation_Z(newCenter[2]);
@@ -739,22 +739,22 @@ void NativeSolidSolver::updateSolution()
 }
 
 /*
- * void NativeSolidSolver::updateGeometry(){
+void NativeSolidSolver::updateGeometry()
+{
+    if (config->GetUnsteady() == "YES")
+    {
+        geometry->UpdateGeometry();
+        structure->SetCenterOfRotation_n_X(structure->GetCenterOfRotation_x());
+        structure->SetCenterOfRotation_n_Y(structure->GetCenterOfRotation_y());
+        structure->SetCenterOfRotation_n_Z(structure->GetCenterOfRotation_z());
+    }
+}
 
-  if(config->GetUnsteady() == "YES"){
-    geometry->UpdateGeometry();
-    structure->SetCenterOfRotation_n_X(structure->GetCenterOfRotation_x());
-    structure->SetCenterOfRotation_n_Y(structure->GetCenterOfRotation_y());
-    structure->SetCenterOfRotation_n_Z(structure->GetCenterOfRotation_z());
-  }
-}*/
-
-/*
-void NativeSolidSolver::displacementPredictor(){
-
-  mapRigidBodyMotion(true, false);
-
-}*/
+void NativeSolidSolver::displacementPredictor()
+{
+    mapRigidBodyMotion(true, false);
+}
+*/
 
 unsigned short NativeSolidSolver::getFSIMarkerID()
 {

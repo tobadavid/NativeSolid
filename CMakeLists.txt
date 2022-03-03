@@ -64,5 +64,6 @@ ENABLE_TESTING()
         
 # -- Sub directories --
 ADD_SUBDIRECTORY( src )
-ADD_SUBDIRECTORY( _api )
+ADD_SUBDIRECTORY( _src )
+ADD_SUBDIRECTORY( tests )
 

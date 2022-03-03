@@ -404,7 +404,7 @@ CMatrix ScalMatProd(const double &scal, const CMatrix &A)
     return copy;
 }
 
-/* INDEPENDENT FUNCTIONS */
+// INDEPENDENT FUNCTIONS
 int SolveSys(const CMatrix &A, CVector &b)
 {
     const int N = A.GetnEq();

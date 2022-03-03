@@ -98,11 +98,10 @@ void Solver::SetInitialState(Config *config, Structure *structure)
 {
 }
 
-/*CLASS ALPHAGENSOLVER*/
+// CLASS ALPHAGENSOLVER
 AlphaGenSolver::AlphaGenSolver(unsigned int nDof, double val_rho,
                                bool bool_linear) : Solver(nDof, bool_linear)
 {
-
     a.Initialize(nDof, 0.0);
     a_n.Initialize(nDof, 0.0);
 
@@ -142,7 +141,7 @@ void AlphaGenSolver::Iterate(double &t0, double &tf, Structure *structure)
     gammaPrime = gamma / (deltaT * beta);
     betaPrime = (1 - alpha_m) / (pow(deltaT, 2) * beta * (1 - alpha_f));
 
-    /*--- Prediction phase ---*/
+    //--- Prediction phase ---
     qddot.Reset();
     a.Reset();
 
@@ -158,7 +157,7 @@ void AlphaGenSolver::Iterate(double &t0, double &tf, Structure *structure)
     qdot += ScalVecProd((1 - gamma) * deltaT, a_n);
     qdot += ScalVecProd(deltaT * gamma, a);
 
-    /*--- Tangent operator and corrector computation ---*/
+    //--- Tangent operator and corrector computation ---
     CVector res(qddot.GetSize(), 0.0);
     CVector Deltaq(qddot.GetSize(), 0.0);
     CMatrix St(qddot.GetSize(), qddot.GetSize(), 0.0);
@@ -459,7 +458,7 @@ void AlphaGenSolver::SetInitialState(Config *config, Structure *structure)
     }
 }
 
-/*CLASS RK4 SOLVER*/
+// CLASS RK4 SOLVER
 RK4Solver::RK4Solver(unsigned nDof, bool bool_linear) : Solver(nDof, bool_linear)
 {
     size = nDof;
@@ -692,7 +691,7 @@ CVector RK4Solver::SetState_n()
     return state;
 }
 
-/*CLASS STATIC SOLVER*/
+// CLASS STATIC SOLVER
 StaticSolver::StaticSolver(unsigned nDof, bool bool_linear) : Solver(nDof, bool_linear)
 {
     _nDof = nDof;
