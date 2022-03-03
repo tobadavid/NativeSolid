@@ -17,6 +17,12 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Update repositories
+      run: sudo apt update
+      
+    - name: Install dependencies
+      run: sudo apt install libopenblas-dev liblapacke-dev libpython3-dev swig
+
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
