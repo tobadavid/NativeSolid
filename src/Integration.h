@@ -1,8 +1,8 @@
 #pragma once
 
-#include "config.h"
-#include "structure.h"
-#include "solver.h"
+#include "Config.h"
+#include "Structure.h"
+#include "Solver.h"
 
 #define PI 3.14159265
 

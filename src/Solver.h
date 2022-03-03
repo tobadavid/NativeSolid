@@ -1,8 +1,8 @@
 #pragma once
 
 #include "MatVec.h"
-#include "structure.h"
-#include "config.h"
+#include "Structure.h"
+#include "Config.h"
 
 class Solver
 {
@@ -49,16 +49,18 @@ class AlphaGenSolver : public Solver
 
 public:
     AlphaGenSolver(unsigned int nDof, double val_rho, bool bool_linear);
-    ~AlphaGenSolver();
-    CVector &GetAccVar();
-    CVector &GetAccVar_n();
-    virtual void Iterate(double &t0, double &tf, Structure *structure);
+    virtual ~AlphaGenSolver() override;
+    virtual CVector &GetAccVar() override;
+    virtual CVector &GetAccVar_n() override;
+    virtual void Iterate(double &t0, double &tf, Structure *structure) override;
+    virtual void ResetSolution() override;
+    virtual void SaveToThePast() override;
+    virtual void SetInitialState(Config *config, Structure *structure) override;
+
+private:
     void ComputeRHS(Structure *structure, CVector &RHS);
     void ComputeResidual(Structure *structure, CVector &res);
     void ComputeTangentOperator(Structure *structure, CMatrix &St);
-    void ResetSolution();
-    void SaveToThePast();
-    virtual void SetInitialState(Config *config, Structure *structure);
 };
 
 class RK4Solver : public Solver
@@ -69,13 +71,15 @@ class RK4Solver : public Solver
 
 public:
     RK4Solver(unsigned nDof, bool bool_linear);
-    ~RK4Solver();
-    virtual void Iterate(double &t0, double &tf, Structure *structure);
+    virtual ~RK4Solver() override;
+    virtual void Iterate(double &t0, double &tf, Structure *structure) override;
+    virtual void SetInitialState(Config *config, Structure *structure) override;
+
+private:
     void EvaluateStateDerivative(double tCurrent, CVector &state,
                                  CVector &stateDerivative,
                                  Structure *structure);
     void interpLoads(double &tCurrent, CVector &val_loads);
-    virtual void SetInitialState(Config *config, Structure *structure);
     CVector SetState();
     CVector SetState_n();
 };
@@ -87,8 +91,8 @@ class StaticSolver : public Solver
 
 public:
     StaticSolver(unsigned nDof, bool bool_linear);
-    ~StaticSolver();
+    virtual ~StaticSolver() override;
 
-    virtual void Iterate(double &t0, double &tf, Structure *structure);
-    virtual void SetInitialState(Config *config, Structure *structure);
+    virtual void Iterate(double &t0, double &tf, Structure *structure) override;
+    virtual void SetInitialState(Config *config, Structure *structure) override;
 };

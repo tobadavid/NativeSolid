@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MatVec.h"
-#include "config.h"
+#include "Config.h"
 
 class Structure
 {
@@ -23,7 +23,8 @@ class Structure
 
 public:
     Structure(Config *config);
-    virtual ~Structure();
+
+    // get/set methods
     void SetCenterOfRotation_X(double coord_x);
     void SetCenterOfRotation_Y(double coord_y);
     void SetCenterOfRotation_Z(double coord_z);

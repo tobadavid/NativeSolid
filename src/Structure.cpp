@@ -1,4 +1,4 @@
-#include "structure.h"
+#include "Structure.h"
 #include <iostream>
 #include <cstdlib>
 #include <stdlib.h>
@@ -76,10 +76,6 @@ Structure::Structure(Config *config)
         std::cerr << "Invalid structural type. Available choices are : SPRIN_HOR, SPRING_VER and AIRFOIL." << std::endl;
         throw(-1);
     }
-}
-
-Structure::~Structure() 
-{
 }
 
 void Structure::SetCenterOfRotation_X(double coord_x)

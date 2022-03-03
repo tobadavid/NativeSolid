@@ -10,9 +10,9 @@ threads="1"
 %{
 
 #include <string>
-#include "NativeSolid_API.h"
+#include "NativeSolidSolver.h"
 
 %}
 
 %include "std_string.i"
-%include "NativeSolid_API.h"
+%include "NativeSolidSolver.h"

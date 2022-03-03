@@ -1,5 +1,5 @@
-#include "geometry.h"
-#include "config.h"
+#include "Geometry.h"
+#include "Config.h"
 #include <cstdlib>
 #include <iostream>
 #include <fstream>

@@ -1,5 +1,5 @@
-#include "solver.h"
-#include "structure.h"
+#include "Solver.h"
+#include "Structure.h"
 #include "MatVec.h"
 #include <iostream>
 #include <fstream>
@@ -446,9 +446,6 @@ void AlphaGenSolver::SetInitialState(Config *config, Structure *structure)
             MM.SetElm(1, 2, (structure->Get_S()) * cos_a);
             MM.SetElm(2, 1, (structure->Get_S()) * cos_a);
             MM.SetElm(2, 2, structure->Get_If());
-        }
-        else
-        {
         }
 
         ComputeRHS(structure, RHS);

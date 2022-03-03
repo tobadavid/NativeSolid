@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cblas.h"
-#include "lapacke.h"
+#include <cblas.h>
+#include <lapacke.h>
 
 #define ROW_MAJ 0
 #define COL_MAJ 1
@@ -12,7 +12,7 @@ class CVector
     double *vec_val;
 
 public:
-    CVector(void);
+    CVector();
     CVector(const unsigned long &size, const double &val = 0.0);
     CVector(const CVector &u);
     ~CVector();
@@ -39,7 +39,7 @@ class CMatrix
     CVector mat_val;
 
 public:
-    CMatrix(void);
+    CMatrix();
     CMatrix(const unsigned long &val_nEq, const unsigned long &val_nVar, const double &val = 0.0);
     CMatrix(const CMatrix &A);
     ~CMatrix();

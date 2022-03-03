@@ -1,11 +1,11 @@
 #pragma once
 
-#include "config.h"
-#include "structure.h"
-#include "integration.h"
+#include "Config.h"
+#include "Structure.h"
+#include "Integration.h"
 #include "MatVec.h"
-#include "geometry.h"
-#include "output.h"
+#include "Geometry.h"
+#include "Output.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>

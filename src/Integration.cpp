@@ -1,5 +1,5 @@
-#include "integration.h"
-#include "solver.h"
+#include "Integration.h"
+#include "Solver.h"
 #include <iostream>
 #include <iomanip>
 #include <cstdlib>

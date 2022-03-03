@@ -1,11 +1,7 @@
-#include "output.h"
+#include "Output.h"
 #include <iostream>
 
 Output::Output()
-{
-}
-
-Output::~Output()
 {
 }
 

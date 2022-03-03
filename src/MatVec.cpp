@@ -2,7 +2,7 @@
 #include <iostream>
 #include <cmath>
 
-CVector::CVector(void) : nElm(0)
+CVector::CVector() : nElm(0)
 {
     vec_val = NULL;
 }
@@ -211,7 +211,7 @@ void CVector::Reset()
 
 // --- Definition of the CMatrix class ---
 
-CMatrix::CMatrix(void) : nEq(0), nVar(0)
+CMatrix::CMatrix() : nEq(0), nVar(0)
 {
 }
 
@@ -353,7 +353,6 @@ double CMatrix::DiagProduct() const
             prod *= GetElm(i, i);
         }
     }
-
     return prod;
 }
 
