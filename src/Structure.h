@@ -1,12 +1,10 @@
 #pragma once
 
 #include "MatVec.h"
-#include "config.h"
+#include "Config.h"
 
-
-class Structure{
-
-protected:
+class Structure
+{
     unsigned int nDof;
     double m;
     double Kh;
@@ -23,17 +21,17 @@ protected:
     double centerOfRotation[3];
     double centerOfRotation_n[3];
 
-
 public:
-    Structure(Config* config);
-    virtual ~Structure();
+    Structure(Config *config);
+
+    // get/set methods
     void SetCenterOfRotation_X(double coord_x);
     void SetCenterOfRotation_Y(double coord_y);
     void SetCenterOfRotation_Z(double coord_z);
     double GetCenterOfRotation_x() const;
     double GetCenterOfRotation_y() const;
     double GetCenterOfRotation_z() const;
-    const double* GetCenterOfRotation() const;
+    const double *GetCenterOfRotation() const;
     void SetCenterOfRotation_n_X(double coord_x);
     void SetCenterOfRotation_n_Y(double coord_y);
     void SetCenterOfRotation_n_Z(double coord_z);
@@ -48,5 +46,4 @@ public:
     double Get_Ca() const;
     double Get_S() const;
     double Get_If() const;
-
 };

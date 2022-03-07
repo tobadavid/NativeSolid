@@ -1,44 +1,40 @@
 #pragma once
 
-#include <string>
-#include "../include/config.h"
-#include "../include/structure.h"
-#include "../include/integration.h"
-#include "../include/output.h"
-#include "../include/MatVec.h"
-#include "../include/geometry.h"
+#include "Config.h"
+#include "Structure.h"
+#include "Integration.h"
+#include "MatVec.h"
+#include "Geometry.h"
+#include "Output.h"
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 
-
-class NativeSolidSolver{
-
-protected:
+class NativeSolidSolver
+{
     std::string confFile;
-    Config* config;
-    Geometry* geometry;
-    Structure* structure;
-    Integration* integrator;
-    Output* output;
+    Config *config;
+    Geometry *geometry;
+    Structure *structure;
+    Integration *integrator;
+    Output *output;
     std::ofstream historyFile;
     std::ofstream historyFile2;
     std::ofstream restartFile;
-    CVector q_uM1; //The displacement at the previous FSI iteration
+    CVector q_uM1; // The displacement at the previous FSI iteration
     double omega;
     unsigned long nSolidInterfaceVertex;
     double varCoordNorm;
 
-
 public:
-    /* NEW generation */
     NativeSolidSolver(std::string str, bool FSIComp);
     ~NativeSolidSolver();
     void exit();
-    //double getVarCoordNorm() const;
+    // double getVarCoordNorm() const;
     void preprocessIteration(unsigned long ExtIter);
     void timeIteration(double t0, double tf);
-    //void mapRigidBodyMotion(bool predicition, bool initialize);
+    // void mapRigidBodyMotion(bool predicition, bool initialize);
     void computeInterfacePosVel(bool initialize);
     void setInitialDisplacements();
     void staticComputation();
@@ -46,8 +42,8 @@ public:
     void writeSolution(double time, int FSIter);
     void saveSolution();
     void updateSolution();
-    //void updateGeometry();
-    //void displacementPredictor();
+    // void updateGeometry();
+    // void displacementPredictor();
     unsigned short getFSIMarkerID();
     unsigned long getNumberOfSolidInterfaceNodes(unsigned short iMarker);
     unsigned int getInterfaceNodeGlobalIndex(unsigned short iMarker, unsigned short iVertex);
